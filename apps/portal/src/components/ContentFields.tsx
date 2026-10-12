@@ -1,13 +1,18 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { useState } from "react";
-import { copyFields } from "../../../web/src/data/copy";
-import { imageLibrary } from "../../../web/src/data/content";
+import { Fragment, useState } from "react";
+import { copyFields, defaultCopy, type CopyField } from "../../../web/src/data/copy";
+import { emptyPerson, imageLibrary, slugify, uniqueSlug, type Person } from "../../../web/src/data/content";
 import type { WebsiteContent } from "../../../web/src/data/WebsiteContent";
 import { productFields } from "../data/content";
+import { useWorkspace } from "../data/workspaceContext";
 import type { DocumentId } from "../data/types";
 import { Field, Icon } from "./ui";
+import { Bone } from "./Skeleton";
+
+// Labels, buttons and other one-liners get a single-line box; paragraphs get a box that grows as you type.
+const isShort = (text = "") => text.length <= 60 && !text.includes("\n");
 
 function ImageField({
   label,
@@ -51,7 +56,9 @@ function ImageField({
 
   return (
     <div className="image-field">
-      {value ? (
+      {value.startsWith("storage:") && resolved === undefined ? (
+        <Bone />
+      ) : value ? (
         <img src={value.startsWith("storage:") ? resolved ?? "/images/sofora-logo.png" : value} alt="Current content image" />
       ) : (
         <span className="image-field-empty">No image</span>
@@ -74,10 +81,12 @@ function ImageField({
           </select>
         </Field>
         <label className="upload-control">
-          <Icon name="plus" />
-          <span>
+          <span className="btn btn-secondary btn-small">
+            <Icon name="plus" />
             {uploading ? "Uploading…" : "Upload a photo"}
-            <input
+          </span>
+          <input
+            className="sr-only"
               type="file"
               disabled={uploading}
               accept="image/png,image/jpeg,image/webp"
@@ -86,7 +95,6 @@ function ImageField({
                 event.target.value = "";
               }}
             />
-          </span>
         </label>
         <small>PNG, JPEG or WebP · up to 2 MB</small>
         {error ? (
@@ -99,71 +107,81 @@ function ImageField({
   );
 }
 
+type ListKey = "loans" | "savings" | "faqs" | "contact" | "board" | "staff" | "partners";
+// One entry of the editor's section menu: some text fields, and maybe one of the page's lists.
+export type EditorSection = { title: string; fields: CopyField[]; list?: ListKey };
+
+// A page's list joins its text section of the same name, or gets its own section after the page header.
+const pageLists: Partial<Record<DocumentId, [ListKey, string]>> = {
+  loans: ["loans", "Loan products"],
+  saving: ["savings", "Savings products"],
+  faq: ["faqs", "Questions"],
+  contact: ["contact", "Details"],
+  board: ["board", "Board members"],
+  staff: ["staff", "Staff members"],
+  partners: ["partners", "Partner cards"],
+};
+const sectionTitles: Record<string, string> = {
+  Brand: "Brand identity",
+  Header: "Header & navigation",
+  Layout: "Page titles & descriptions",
+};
+
+export function pageSections(id: DocumentId): EditorSection[] {
+  const sections: EditorSection[] = [];
+  for (const field of copyFields.filter((field) => field.page === id)) {
+    const title = sectionTitles[field.section] ?? field.section;
+    const section = sections.find((item) => item.title === title);
+    if (section) section.fields.push(field);
+    else sections.push({ title, fields: [field] });
+  }
+  const list = pageLists[id];
+  if (list) {
+    const section = sections.find((item) => item.title === list[1]);
+    if (section) section.list = list[0];
+    else sections.splice(sections[0]?.title === "Page header" ? 1 : 0, 0, { title: list[1], fields: [], list: list[0] });
+  }
+  return sections;
+}
+
+// What a section holds, to tell whether it has unsaved changes.
+export const sectionValue = (section: EditorSection, content: WebsiteContent) =>
+  JSON.stringify([section.fields.map((field) => content.copy[field.key]), section.list ? content[section.list] : null]);
+
+// `target` with this section's values taken from `source`.
+export function applySection(target: WebsiteContent, source: WebsiteContent, section: EditorSection) {
+  const next = structuredClone(target);
+  for (const field of section.fields) next.copy[field.key] = source.copy[field.key];
+  if (section.list) (next as Record<string, unknown>)[section.list] = structuredClone(source[section.list]);
+  return next;
+}
+
 export function ContentFields({
-  id,
+  section,
   content,
   onChange,
   disabled,
 }: {
-  id: DocumentId;
+  section: EditorSection;
   content: WebsiteContent;
   onChange: (content: WebsiteContent) => void;
   disabled: boolean;
 }) {
-  const [search, setSearch] = useState("");
-  const fields = copyFields.filter(
-    (field) =>
-      field.page === id &&
-      `${field.section} ${field.label} ${content.copy[field.key]}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-  );
-  const sections = [...new Set(fields.map((field) => field.section))];
+  // People already on the live site keep their page address when renamed.
+  const { published } = useWorkspace().state.content;
+  const savedSlugs = {
+    board: new Set(published.board.map((p) => p.slug)),
+    staff: new Set(published.staff.map((p) => p.slug)),
+  };
+  const list = section.list;
   function update(updateContent: (next: WebsiteContent) => void) {
     const next = structuredClone(content);
     updateContent(next);
     onChange(next);
   }
   return (
-    <>
-      <div className="editor-search">
-        <Field label="Find a content field">
-          <input
-            type="search"
-            placeholder="Search headings, paragraphs, labels…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </Field>
-      </div>
-      <fieldset disabled={disabled} className="editor-fields">
-        {sections.map((section, index) => (
-          <details
-            className="editor-section"
-            key={section}
-            open={index === 0 || !!search}
-          >
-            <summary>
-              <span>
-                <span className="section-number">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                {section.replace(
-                  /^(Brand|Header|Footer|Layout)$/,
-                  (label) =>
-                    ({
-                      Brand: "Brand identity",
-                      Header: "Header & navigation",
-                      Footer: "Footer",
-                      Layout: "Page titles & descriptions",
-                    })[label]!,
-                )}
-              </span>
-              <Icon name="plus" />
-            </summary>
-            <div className="editor-section-body">
-              {fields
-                .filter((field) => field.section === section)
+    <fieldset disabled={disabled} className="editor-fields">
+              {section.fields
                 .map((field) =>
                   field.kind === "image" ? (
                     <ImageField
@@ -188,9 +206,20 @@ export function ContentFields({
                             })
                           }
                         />
+                      ) : isShort(defaultCopy[field.key]) ? (
+                        <input
+                          type="text"
+                          value={content.copy[field.key]}
+                          onChange={(event) =>
+                            update((next) => {
+                              next.copy[field.key] = event.target.value;
+                            })
+                          }
+                        />
                       ) : (
                         <textarea
-                          rows={content.copy[field.key].length > 100 ? 3 : 2}
+                          className="auto-grow"
+                          rows={2}
                           value={content.copy[field.key]}
                           onChange={(event) =>
                             update((next) => {
@@ -202,22 +231,9 @@ export function ContentFields({
                     </Field>
                   ),
                 )}
-            </div>
-          </details>
-        ))}
-        {!fields.length ? (
-          <p className="panel-empty">
-            No matching copy fields. Try another search.
-          </p>
-        ) : null}
-        {id === "loans" || id === "saving"
-          ? ([id === "loans" ? "loans" : "savings"] as const).map((list) => (
-              <details className="editor-section" open key={list}>
-                <summary>
-                  <span>{list === "loans" ? "Loan products" : "Savings products"}</span>
-                  <Icon name="plus" />
-                </summary>
-                <div className="editor-section-body">
+        {list === "loans" || list === "savings"
+          ? ([list] as const).map((list) => (
+                <Fragment key={list}>
                   <p className="quiet">
                     Each product has its own page on the website. Lists take one item per line.
                   </p>
@@ -253,17 +269,11 @@ export function ContentFields({
                       ))}
                     </details>
                   ))}
-                </div>
-              </details>
+                </Fragment>
             ))
           : null}
-        {id === "contact" ? (
-          <details className="editor-section" open>
-            <summary>
-              <span>Contact details</span>
-              <Icon name="plus" />
-            </summary>
-            <div className="editor-section-body">
+        {list === "contact" ? (
+          <>
               <Field label="Email address">
                 <input
                   type="email"
@@ -299,94 +309,128 @@ export function ContentFields({
                   }
                 />
               </Field>
-            </div>
-          </details>
+          </>
         ) : null}
-        {id === "board" || id === "staff"
-          ? ([id] as const).map((directory) => (
-              <details className="editor-section" open key={directory}>
-                <summary>
-                  <span>
-                    {directory === "board"
-                      ? "Board of directors"
-                      : "Staff and loan team"}
-                  </span>
-                  <Icon name="plus" />
-                </summary>
-                <div className="editor-section-body">
-                  <p className="quiet">
-                    These are the public website’s people listings, separate
-                    from portal accounts.
-                  </p>
-                  {content[directory].map(([name, role, photo], index) => (
-                    <div className="repeat-item" key={index}>
-                      <div className="two-fields">
-                        <Field label="Name">
-                          <input
-                            value={name}
-                            onChange={(event) =>
-                              update((next) => {
-                                next[directory][index]![0] = event.target.value;
-                              })
+        {list === "board" || list === "staff"
+          ? ([list] as const).map((directory) => {
+              const base = directory === "board" ? "/board-of-directors/" : "/staff/";
+              const list = content[directory];
+              return (
+                <Fragment key={directory}>
+                    <p className="quiet">
+                      Each person has their own page on the website, opened from their card. These listings are
+                      separate from portal accounts. Biographies take a blank line between paragraphs.
+                    </p>
+                    {list.map((person, index) => {
+                      const isNew = !savedSlugs[directory].has(person.slug);
+                      const set = (change: (p: Person) => void) =>
+                        update((next) => change(next[directory][index]!));
+                      return (
+                        <details className="repeat-item" key={index} open={isNew || undefined}>
+                          <summary className="repeat-summary">
+                            <span>
+                              {person.name || "New person"}
+                              {person.role ? <small> · {person.role}</small> : null}
+                            </span>
+                            <Icon name="plus" />
+                          </summary>
+                          <div className="two-fields">
+                            <Field label="Name">
+                              <input
+                                value={person.name}
+                                onChange={(event) =>
+                                  update((next) => {
+                                    const p = next[directory][index]!;
+                                    p.name = event.target.value;
+                                    // New people get their page address from the name; saved ones keep theirs so links still work.
+                                    if (isNew)
+                                      p.slug = uniqueSlug(
+                                        slugify(p.name),
+                                        next[directory].filter((_, i) => i !== index).map((o) => o.slug),
+                                      );
+                                  })
+                                }
+                              />
+                            </Field>
+                            <Field label="Role">
+                              <input value={person.role} onChange={(event) => set((p) => void (p.role = event.target.value))} />
+                            </Field>
+                          </div>
+                          <Field
+                            label="Page address"
+                            hint={
+                              isNew
+                                ? `Filled in from the name. The page will be at ${base}${person.slug || "…"}/`
+                                : `The page is at ${base}${person.slug}/. Changing this breaks links to the old address.`
                             }
-                          />
-                        </Field>
-                        <Field label="Role">
-                          <input
-                            value={role}
-                            onChange={(event) =>
-                              update((next) => {
-                                next[directory][index]![1] = event.target.value;
-                              })
-                            }
-                          />
-                        </Field>
-                      </div>
-                      <ImageField
-                        label="Photo"
-                        value={photo}
-                        onChange={(value) =>
-                          update((next) => {
-                            next[directory][index]![2] = value;
-                          })
-                        }
-                      />
-                      <button
-                        className="text-button danger-text"
-                        type="button"
-                        onClick={() =>
-                          update((next) => {
-                            next[directory].splice(index, 1);
-                          })
-                        }
-                      >
-                        Remove person
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    className="btn btn-secondary"
-                    type="button"
-                    onClick={() =>
-                      update((next) => {
-                        next[directory].push(["", "", "/images/board-modou-lamin-badjie.jpg"]);
-                      })
-                    }
-                  >
-                    <Icon name="plus" />
-                    Add person
-                  </button>
-                </div>
-              </details>
-            ))
+                          >
+                            <input
+                              value={person.slug}
+                              onChange={(event) =>
+                                set((p) => void (p.slug = event.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-")))
+                              }
+                            />
+                          </Field>
+                          <ImageField label="Photo" value={person.photo} onChange={(value) => set((p) => void (p.photo = value))} />
+                          <Field label="Quote (optional)">
+                            <textarea rows={2} value={person.quote} onChange={(event) => set((p) => void (p.quote = event.target.value))} />
+                          </Field>
+                          <Field label="Biography">
+                            <textarea rows={6} value={person.bio} onChange={(event) => set((p) => void (p.bio = event.target.value))} />
+                          </Field>
+                          <Field label={directory === "board" ? "Responsibilities (one per line)" : "How they can help (one per line)"}>
+                            <textarea rows={4} value={person.focus} onChange={(event) => set((p) => void (p.focus = event.target.value))} />
+                          </Field>
+                          <div className="two-fields">
+                            <Field label={directory === "board" ? "On the board since (optional)" : "With Sofora since (optional)"}>
+                              <input value={person.since} placeholder="e.g. 2019" onChange={(event) => set((p) => void (p.since = event.target.value))} />
+                            </Field>
+                            <Field label="Email (optional)">
+                              <input type="email" value={person.email} onChange={(event) => set((p) => void (p.email = event.target.value.trim()))} />
+                            </Field>
+                          </div>
+                          <div className="repeat-actions">
+                            <button
+                              className="text-button"
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => update((next) => void next[directory].splice(index - 1, 0, next[directory].splice(index, 1)[0]!))}
+                            >
+                              Move up
+                            </button>
+                            <button
+                              className="text-button"
+                              type="button"
+                              disabled={index === list.length - 1}
+                              onClick={() => update((next) => void next[directory].splice(index + 1, 0, next[directory].splice(index, 1)[0]!))}
+                            >
+                              Move down
+                            </button>
+                            <button
+                              className="text-button danger-text"
+                              type="button"
+                              onClick={() => update((next) => void next[directory].splice(index, 1))}
+                            >
+                              Remove person
+                            </button>
+                          </div>
+                        </details>
+                      );
+                    })}
+                    <button
+                      className="btn btn-secondary"
+                      type="button"
+                      onClick={() => update((next) => void next[directory].push({ ...emptyPerson }))}
+                    >
+                      <Icon name="plus" />
+                      Add person
+                    </button>
+                </Fragment>
+              );
+            })
           : null}
-        {id === "partners" ? (
-          <details className="editor-section" open>
-            <summary>
-              <span>Partners</span>
-              <Icon name="plus" />
-            </summary>
-            <div className="editor-section-body">
+        {list === "partners" ? (
+          <>
               <p className="quiet">
                 Shown as cards in this order. A partner with a website opens it in a new tab; without a logo, the
                 short name is shown instead.
@@ -488,16 +532,10 @@ export function ContentFields({
                 <Icon name="plus" />
                 Add partner
               </button>
-            </div>
-          </details>
+          </>
         ) : null}
-        {id === "faq" ? (
-          <details className="editor-section" open>
-            <summary>
-              <span>Frequently asked questions</span>
-              <Icon name="plus" />
-            </summary>
-            <div className="editor-section-body">
+        {list === "faqs" ? (
+          <>
               {content.faqs.map((faq, index) => (
                 <div className="repeat-item" key={index}>
                   <Field label={`Question ${index + 1}`}>
@@ -546,10 +584,8 @@ export function ContentFields({
                 <Icon name="plus" />
                 Add question
               </button>
-            </div>
-          </details>
+          </>
         ) : null}
-      </fieldset>
-    </>
+    </fieldset>
   );
 }

@@ -1,4 +1,4 @@
-import { useWorkspace } from "../data/WorkspaceProvider";
+import { useWorkspace } from "../data/workspaceContext";
 import { resolveImages } from "../../../web/src/data/LiveWebsite";
 import { useEffect, useRef, useState } from "react";
 import type { WebsiteContent } from "../../../web/src/data/WebsiteContent";
@@ -15,7 +15,7 @@ export function WebsitePreview({
   version: string;
 }) {
   const { images: savedImages } = useWorkspace();
-  const references = [...new Set([...Object.values(content.copy), ...content.board.map((p) => p[2]), ...content.staff.map((p) => p[2]), ...content.partners.map((p) => p.logo)].filter(value => value.startsWith("storage:")))];
+  const references = [...new Set([...Object.values(content.copy), ...content.board.map((p) => p.photo), ...content.staff.map((p) => p.photo), ...content.partners.map((p) => p.logo)].filter(value => value.startsWith("storage:")))];
   const uploadedImages = useQuery(api.media.urls, references.length ? { references } : "skip");
   const images = { ...savedImages, ...uploadedImages };
   const frame = useRef<HTMLIFrameElement>(null);
@@ -32,6 +32,8 @@ export function WebsitePreview({
   const viewportWidth = mobile ? 375 : 1280;
   const scale = Math.min(1, (availableWidth || viewportWidth) / viewportWidth);
   function sendContent() {
+    // Wait for new uploads' addresses so the preview never flashes placeholder logos.
+    if (references.length && uploadedImages === undefined) return;
     frame.current?.contentWindow?.postMessage(
       { type: "sofora-website-preview", content: resolveImages(content, images) },
       window.location.origin,

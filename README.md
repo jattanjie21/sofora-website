@@ -44,6 +44,9 @@ pnpm build             # Typecheck, then build through Turborepo
 pnpm preview           # Serve the website's production build
 pnpm --filter @sofora/portal preview   # Serve the portal build on port 4174
 pnpm screenshot /services/ out.png        # Full-page screenshot of a public page (needs npm start)
+pnpm screenshot /contact-us/ out.png --live --widths=1440,390   # Real content, two widths
+pnpm screenshot /applications out.png --portal                  # Portal page, signed in as admin
+pnpm screenshot / out.png --portal --loading                    # Loading skeleton
 ```
 
 The production outputs are `apps/web/dist` and `apps/portal/dist`. Both apps need `VITE_CONVEX_URL` set at build time.
@@ -55,25 +58,27 @@ apps/
   web/                 # @sofora/web: public website
     public/            # Local images, fonts and font licences
     src/
-      components/      # Navigation, layout, calculator and repeated page elements
+      components/      # Navigation, layout, calculator, icons, loading skeleton and repeated page elements
       data/            # Default content and copy, content context, LiveWebsite (live content from Convex)
       pages/           # Public routes, including the application form
       styles.css       # Design tokens, components, responsive styles
   portal/              # @sofora/portal: staff portal
     src/
-      components/      # Forms, feedback, dialogs, website preview
+      components/      # Forms, feedback, dialogs, website preview, loading skeletons
       data/            # Types and permissions, document definitions, WorkspaceProvider (Convex hooks)
-      pages/           # Login, overview, content, applications, staff, profile
+      pages/           # Login, overview, content, applications, contact inbox, staff, profile
       styles.css       # Staff workspace styling
 convex/
-  schema.ts            # Tables: staff, invitations, pages, applications, activity, counts, media (+ auth tables)
+  schema.ts            # Tables: staff, invitations, pages, applications, contactMessages, activity, counts, media (+ auth tables)
   auth.ts              # Password sign-in; account creation only through a staff invitation
   lib/access.ts        # staffQuery/staffMutation wrappers and permission checks
-  content.ts           # Published content, editorial workflow
-  applications.ts      # Public submissions, staff queue and decisions
+  content.ts           # Published content and saving (save = live)
+  applications.ts      # Public submissions (with ID/photo uploads), staff queue and decisions
+  contact.ts           # Contact form messages and the portal inbox
   staff.ts, media.ts   # Staff management, profiles, invitations; image uploads
-  setup.ts             # One-time workspace initialisation
-scripts/               # npm start / npm stop / pnpm screenshot
+  setup.ts             # One-time workspace initialisation, page resets, backfills
+  devLogins.ts         # admin/admin login on the dev deployment
+scripts/               # npm start / npm stop / pnpm screenshot (see convex/README.md for the full backend map)
 docs/
 ```
 
@@ -85,29 +90,29 @@ The website reproduces the original WordPress site at soforaccu.com (Borrow them
 
 | Menu                 | Routes                                                                                                   |
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
-| Home                 | `/`: slider, loan rates, about, loan services, loan calculator, latest news            |
+| Home                 | `/`: slider, loan rates, about, loan services, loan calculator, help banner, call to action |
 | About Us             | `/about-us/`, `/history/`, `/faq/`                                                                       |
-| Team                 | `/board-of-directors/`, `/staff/` (also `/loan-team/`, linked from the home page)                        |
+| Team                 | `/board-of-directors/`, `/staff/` (also `/loan-team/`, linked from the home page); each person has a profile at `/board-of-directors/<slug>/` or `/staff/<slug>/` |
 | Services             | `/services/` hub (loans, savings, how it works, calculator, forms), one page per product such as `/services/car-loan/`, `/downloads/` (fillable PDFs in `apps/web/public/downloads`). `/loan-services/` and `/saving/` redirect to the hub. Member Login (external) is in the top bar |
 | Blog                 | `/blog/`, `/exciting-news-for-sofora-cooperative-credit-union-members/`, `/the-evolution-of-sofora/`     |
-| Partners             | External links to partner credit unions                                                                  |
+| Partners             | `/partners/`: partner logos, each linking to the partner's website in a new tab                       |
 | Forms & Downloads    | `/downloads/`, `/registration-form/`, `/membership-application-form/`, `/kafo-application-form/`, `/loan-application-form/` |
-| Gallery              | `/photo-gallery/`, `/youtube-gallery/`                                                                   |
+| Gallery              | `/photo-gallery/` with Photos and Videos tabs (`/youtube-gallery/` is the Videos tab)                    |
 | Contact Us           | `/contact-us/`                                                                                           |
 
 Unknown routes display a not-found page.
 
-The site loads its content from Convex (`content.published`) through `LiveWebsite.tsx`, so changes saved in the portal appear on the website immediately. Images uploaded in the portal are stored in Convex file storage and referenced as `storage:` IDs, which are swapped for URLs when the page loads.
+The site loads its content from Convex (`content.published`) through `LiveWebsite.tsx`, showing a loading skeleton until it arrives, so changes saved in the portal appear on the website immediately. Images uploaded in the portal are stored in Convex file storage and referenced as `storage:` IDs, which are swapped for URLs when the page loads.
 
-The four forms replace the old WordPress forms. Each sends an application to the portal's Applications queue through `applications.submit`, which requires consent, includes a hidden spam-trap field, and is rate-limited to 200 submissions per hour overall and 5 per hour per email address. The Kafo form is a group membership application. Each form page also links to the matching fillable PDF. The online forms deliberately don't collect ID numbers, photos or signatures, which the paper forms do. The contact form has no mail server: it opens the visitor's email app with the message addressed to Sofora.
+The four forms replace the old WordPress forms. Each sends an application to the portal's Applications queue through `applications.submit`, which requires consent, includes a hidden spam-trap field, and is rate-limited to 200 submissions per hour overall and 5 per hour per email address. The Kafo form is a group membership application. Each form page also links to the matching fillable PDF. Applicants upload a photo of their ID and a passport-size photo, stored in Convex file storage and shown on the application in the portal. The contact form sends its message to the portal's **Contact** inbox through `contact.submit`, with the same spam trap and rate limits.
 
 Differences from the old site:
 
 - The loan card icons are redrawn in the same line style, because the originals came from an icon font licensed with the WordPress theme.
-- The old Photo Gallery plugin no longer showed any photos. The new gallery uses photos from the old site's media library.
+- The old Photo Gallery plugin no longer showed any photos. The new gallery uses photos from the old site's media library, with pagination and a full-screen viewer with previous/next.
 - The YouTube Gallery embeds the channel's uploads instead of the Elfsight widget.
 - Search (the round button in the header) works like the old one, with results at `/?s=…`. It searches the live content in the browser, so portal edits are searchable straight away.
-- The footer newsletter signup and embedded Twitter feed are left out. The footer and home page link to Twitter instead.
+- The footer newsletter signup and embedded Twitter feed are left out. The footer links to the social media profiles set in the portal instead.
 - The loan and amortization calculators are merged into one loan calculator, which shows the month-by-month repayment schedule on the page instead of emailing a PDF.
 
 All text and images are defined in `apps/web/src/data/copy.ts` (one row per field, grouped by page; the portal builds its editor from this list) and the lists in `apps/web/src/data/content.ts` (loans, FAQs, board, staff, contact details, and the image library offered in the portal's photo pickers). These seed the Convex `pages` table when the workspace is initialised. After that, content is edited in the portal. After adding a page, `pnpm exec convex run setup:addMissingPages` creates its row with the defaults and leaves the other pages alone. If the page structure changes more deeply, `pnpm exec convex run setup:resetPages` replaces all stored pages with the defaults. Page layouts are in `apps/web/src/pages`, and colours are at the beginning of `apps/web/src/styles.css`.
@@ -163,7 +168,7 @@ See [portal and content architecture](docs/portal-design.md).
 
 ## Calculators
 
-Both calculators use equal monthly payments on a reducing balance:
+The loan calculator uses equal monthly payments on a reducing balance:
 
 ```text
 r = annual percentage rate / 1200
@@ -183,18 +188,16 @@ There is no automated test framework. Type checking and production builds don’
 5. In the loan calculator, the defaults (GMD 50,000, 12 months, 15%) should show GMD4,512.92 a month. Typing GMD 12,000 at 12% for 12 months should show GMD1,066.19 a month and a 12-row schedule.
 6. On the Downloads page, each Download button should save the matching PDF. On the application forms, the tabs in the header switch between the four forms.
 7. Submit each of the four forms. Expect a reference number, then find both in the portal’s Applications queue.
-8. In the portal, edit a page and press **Save**. The public website should update without a refresh.
+8. In the portal, edit a section of a page and press **Save this section**. The public website should update without a refresh.
 9. Enable reduced motion in your operating system and confirm that the slider no longer advances by itself and smooth scrolling is off.
 
 For a shorter end-to-end check, follow [the manual walkthrough](docs/portal-walkthrough.md).
 
 ## Production handoff
 
-The live website has not been deployed or changed.
+The live website has not been deployed or changed. Deployment is set up for **Vercel** (two projects, `apps/web` and `apps/portal`, each with a `vercel.json`) plus a Convex production deployment. Follow [docs/deployment.md](docs/deployment.md) step by step: Convex environment variables (auth, Resend, `EMAIL_LIVE`), the two Vercel projects, `setup:initialize` for the first administrator, and the Resend webhook.
 
-- Deploy the Convex backend to a production deployment (`npx convex deploy`), configure Convex Auth there, and run `setup:initialize` once.
-- Build both apps with `VITE_CONVEX_URL` pointing at the production deployment.
-- Configure your static host to serve `apps/web/dist` and `apps/portal/dist` and rewrite application routes to `index.html` while preserving real asset paths. Without the rewrite, refreshing a route such as `/services/` fails.
+- Another static host works too: build both apps with `VITE_CONVEX_URL` pointing at the production deployment, serve `apps/web/dist` and `apps/portal/dist`, and rewrite application routes to `index.html` while preserving real asset paths. Without the rewrite, refreshing a route such as `/services/` fails.
 - The routes match the old WordPress addresses, so no redirects are needed when the domain moves. Old addresses that no longer exist (`/blog/` pagination, `/author/…`, `/downloads/` file links with `?wpdmdl=`) show the not-found page.
 - Before publishing, confirm the organisation’s current product terms, staff, contact details, permission to use the images, and any legal notices.
 - This is a client-rendered Vite application. Social previews use the homepage metadata; page-specific metadata is applied in the browser. Page-specific social previews and indexing would need static prerendering or server rendering.

@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth } from "convex/react";
 import { Field, Icon, useFeedback } from "../components/ui";
+import { Bone } from "../components/Skeleton";
 
 export function Login() {
   const { signIn } = useAuthActions();
@@ -31,47 +32,38 @@ export function Login() {
     await run(() => signIn("password", { email, password, flow: invitation ? "signUp" : "signIn", ...(invitation ? { invitation } : {}) }), "Logged in.");
   }
 
-  if (isLoading) return <p className="panel-empty" role="status">Checking your session…</p>;
+  if (isLoading)
+    return (
+      <main className="login-page">
+        <LoginPhoto />
+        <section className="login-form-section">
+          <p className="sr-only" role="status">
+            Checking your session…
+          </p>
+          <div className="login-card skeleton-lines" aria-hidden="true">
+            <Bone width={48} height={48} />
+            <Bone width="70%" height={34} />
+            <Bone width="55%" height={13} />
+            <Bone width={120} height={12} />
+            <Bone width="100%" height={50} />
+            <Bone width={90} height={12} />
+            <Bone width="100%" height={50} />
+            <Bone width="100%" height={50} />
+          </div>
+        </section>
+      </main>
+    );
   if (isSignedIn) return <Navigate to={destination} replace />;
 
   return (
     <main className="login-page">
-      <section className="login-story" aria-labelledby="login-story-title">
-        <div className="portal-brand">
-          <img src="/images/sofora-logo.png" width="56" height="56" alt="" />
-          <span>
-            <strong>
-              SOFORA<span>.</span>
-            </strong>
-            <small>STAFF WORKSPACE</small>
-          </span>
-        </div>
-        <div className="login-story-copy">
-          <span className="note-mark">
-            <Icon name="sprout" />
-          </span>
-          <p className="kicker">People helping people</p>
-          <h2 id="login-story-title">
-            Small steps.
-            <br />
-            Shared progress.
-          </h2>
-          <p>
-            A little care behind every member’s next chapter. Your workspace to
-            help make it happen.
-          </p>
-        </div>
-        <p className="login-story-footer">Sofora Cooperative Credit Union</p>
-      </section>
+      <LoginPhoto />
       <section className="login-form-section" aria-labelledby="login-title">
-        <div className="login-form-wrap">
-          <p className="kicker">Welcome to your workspace</p>
-          <h1 id="login-title">{invitation ? "Make yourself at home." : "Good to see you."}</h1>
-          <p className="page-description">
-            {invitation ? "Activate your staff account with your own password." : "Log in to pick up where you left off."}
-          </p>
+        <div className="login-card">
+          <img className="login-logo" src="/images/sofora-logo.png" width="52" height="52" alt="Sofora" />
+          <h1 id="login-title">{invitation ? "Activate your account" : "Welcome back"}</h1>
+          {invitation ? <p className="login-lead">Choose your own password to finish setting up your staff account.</p> : null}
           {message}
-          {import.meta.env.DEV && !invitation ? <p className="login-footnote">Development: log in as <strong>admin</strong> with password <strong>admin</strong>.</p> : null}
           <form onSubmit={submit}>
             <Field label={import.meta.env.DEV ? "Email address or username" : "Email address"}>
               <input
@@ -94,15 +86,36 @@ export function Login() {
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                placeholder={invitation ? "At least 12 characters" : "Your password"}
               />
             </Field>
             <button className="btn login-submit" disabled={pending}>
-              {pending ? "Please wait…" : invitation ? "Activate account" : "Log in"} <Icon name="arrow" />
+              {pending ? "Please wait…" : invitation ? "Activate account" : "Sign in"} <Icon name="arrow" />
             </button>
           </form>
-          <p className="login-footnote">{invitation ? "Choose a password with at least 12 characters. Activation links expire after seven days." : "Need access or help signing in? Contact your Sofora administrator."}</p>
+          <p className="login-footnote">{invitation ? "Activation links expire after seven days." : "Need access or help signing in? Contact your Sofora administrator."}</p>
         </div>
       </section>
     </main>
+  );
+}
+
+// The photo panel beside the form; static, so it also shows while the session is checked.
+function LoginPhoto() {
+  return (
+    <aside className="login-photo">
+      <img className="login-photo-image" src="/images/sofora-community.jpg" alt="" />
+      <div className="login-photo-content">
+        <div className="login-photo-brand">
+          <img src="/images/logo-white.png" width="40" height="40" alt="" />
+          <strong>Sofora</strong>
+        </div>
+        <div className="login-photo-copy">
+          <p className="login-photo-kicker">People helping people</p>
+          <h2>Small steps. Shared progress.</h2>
+          <p>Sofora Cooperative Credit Union</p>
+        </div>
+      </div>
+    </aside>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useWebsite } from "../data/WebsiteContent";
-import { Icon } from "./Icon";
+import { Icon, SocialIcon, type SocialId } from "./Icon";
 import { SmartLink } from "./ui";
 import { SearchForm } from "../pages/Search";
 
@@ -195,22 +195,102 @@ function Header() {
   );
 }
 
+const socials: [SocialId, string, string][] = [
+  ["facebook", "Facebook", "shared.social-facebook"],
+  ["instagram", "Instagram", "shared.social-instagram"],
+  ["x", "X (Twitter)", "shared.twitter-url"],
+  ["linkedin", "LinkedIn", "shared.social-linkedin"],
+  ["youtube", "YouTube", "shared.social-youtube"],
+  ["tiktok", "TikTok", "shared.social-tiktok"],
+];
+
 function Footer() {
-  const { copy: c } = useWebsite();
+  const { copy: c, contact } = useWebsite();
+  const links = [
+    ["shared.nav-about", "/about-us/"],
+    ["shared.nav-history", "/history/"],
+    ["shared.nav-services", "/services/"],
+    ["shared.nav-partners", "/partners/"],
+    ["shared.nav-gallery", "/photo-gallery/"],
+    ["shared.nav-faq", "/faq/"],
+  ] as const;
+  const forms = [
+    ["shared.nav-membership-form", "/membership-application-form/"],
+    ["shared.nav-loan-form", "/loan-application-form/"],
+    ["shared.nav-kafo-form", "/kafo-application-form/"],
+    ["shared.nav-registration-form", "/registration-form/"],
+    ["shared.nav-downloads", "/downloads/"],
+  ] as const;
   return (
     <footer className="site-footer">
       <div className="container container-wide footer-main">
-        <Link to="/" aria-label={c["shared.name"]}>
-          <img src={c["shared.footer-logo"]} alt={c["shared.name"]} width="96" height="96" />
-        </Link>
-        <a className="footer-social" href={c["shared.twitter-url"]} target="_blank" rel="noreferrer">
-          <Icon name="twitter" />
-          {c["shared.twitter-label"]}
-        </a>
+        <div className="footer-brand">
+          <Link to="/" aria-label={c["shared.name"]}>
+            <img src={c["shared.footer-logo"]} alt={c["shared.name"]} width="96" height="96" />
+          </Link>
+          <p>{c["shared.footer-text"]}</p>
+          <h2>{c["shared.footer-social-heading"]}</h2>
+          <ul className="footer-socials">
+            {socials
+              .filter(([, , key]) => c[key as keyof typeof c])
+              .map(([id, name, key]) => (
+                <li key={id}>
+                  <a href={c[key as keyof typeof c]} target="_blank" rel="noreferrer" aria-label={name} title={name}>
+                    <SocialIcon id={id} />
+                  </a>
+                </li>
+              ))}
+          </ul>
+        </div>
+        <nav className="footer-column" aria-label={c["shared.footer-links-heading"]}>
+          <h2>{c["shared.footer-links-heading"]}</h2>
+          <ul>
+            {links.map(([key, to]) => (
+              <li key={to}>
+                <Link to={to}>{c[key]}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <nav className="footer-column" aria-label={c["shared.footer-forms-heading"]}>
+          <h2>{c["shared.footer-forms-heading"]}</h2>
+          <ul>
+            {forms.map(([key, to]) => (
+              <li key={to}>
+                <Link to={to}>{c[key]}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="footer-column footer-contact">
+          <h2>{c["shared.footer-contact-heading"]}</h2>
+          <ul>
+            <li>
+              <Icon name="pin" />
+              <span>{contact.address}</span>
+            </li>
+            {contact.phones.slice(0, 2).map((phone) => (
+              <li key={phone}>
+                <Icon name="phone" />
+                <a href={`tel:${phone.replace(/\s+/g, "")}`}>{phone}</a>
+              </li>
+            ))}
+            <li>
+              <Icon name="mail" />
+              <a href={`mailto:${contact.email}`}>{contact.email}</a>
+            </li>
+          </ul>
+        </div>
       </div>
       <div className="footer-bottom">
-        <div className="container container-wide">
-          Copyright {new Date().getFullYear()} | {c["shared.copyright"]}
+        <div className="container container-wide footer-bottom-inner">
+          <span>
+            © {new Date().getFullYear()} {c["shared.copyright"]}
+          </span>
+          <button type="button" className="footer-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            {c["shared.footer-top"]}
+            <Icon name="chevronDown" />
+          </button>
         </div>
       </div>
     </footer>

@@ -7,7 +7,7 @@ import { staffQuery, staffMutation, requirePermission, log, activityDto } from "
 import { defaultWebsiteContent, type WebsiteContent } from "../apps/web/src/data/websiteDefaults";
 import { copyFields } from "../apps/web/src/data/copy";
 import { applyDocument, contentError, documents, productFields } from "../apps/portal/src/data/content";
-import type { Product } from "../apps/web/src/data/content";
+import { toPeople, type Product } from "../apps/web/src/data/content";
 import type { DocumentId } from "../apps/portal/src/data/types";
 
 export function slice(content:WebsiteContent,key:DocumentId) {
@@ -22,8 +22,11 @@ const productsValid=(list:unknown,defaults:Product[])=>Array.isArray(list)&&list
 export function merge(content:WebsiteContent,payload:string,key:DocumentId) {
   const data=JSON.parse(payload);
   for(const list of ["loans","savings"] as const) if(data[list]) data[list]=withProductDefaults(data[list],defaultWebsiteContent[list]);
+  // Older saves hold people as [name, role, photo] rows.
+  for(const list of ["board","staff"] as const) if(data[list]) data[list]=toPeople(data[list],defaultWebsiteContent[list]);
   return applyDocument(content,{...defaultWebsiteContent,...data,copy:{...defaultWebsiteContent.copy,...data.copy}},key);
 }
+const personLimits=[["slug",100],["name",200],["role",200],["photo",200],["quote",1000],["bio",12000],["since",50],["focus",4000],["email",254]] as const;
 async function validate(ctx:QueryCtx,payload:string,key:DocumentId) {
   if(payload.length>300000) throw new ConvexError("This page is too large. Shorten its content before saving.");
   let content:WebsiteContent;
@@ -37,8 +40,8 @@ async function validate(ctx:QueryCtx,payload:string,key:DocumentId) {
       if(f.kind==="image") images.push(value);
     }
     for(const group of [content.board,content.staff]) {
-      if(!Array.isArray(group)||group.length>100||group.some(row=>!Array.isArray(row)||row.length!==3||row.some(s=>typeof s!=="string"||s.length>200))) throw new Error();
-      images.push(...group.map(row=>row[2]));
+      if(!Array.isArray(group)||group.length>100||group.some(p=>!p||personLimits.some(([k,max])=>typeof p[k]!=="string"||p[k].length>max))) throw new Error();
+      images.push(...group.map(p=>p.photo));
     }
     if(!Array.isArray(content.partners)||content.partners.length>100||content.partners.some(p=>!p||(["name","fullName","logo","url"] as const).some(k=>typeof p[k]!=="string"||p[k].length>2000))) throw new Error();
     images.push(...content.partners.map(p=>p.logo).filter(Boolean));
@@ -61,7 +64,7 @@ export async function publishedContent(ctx:QueryCtx) {
   return content;
 }
 async function imageUrls(ctx:QueryCtx,contents:WebsiteContent[]) {
-  const ids=[...new Set(contents.flatMap(content=>[...Object.values(content.copy),...content.board.map(p=>p[2]),...content.staff.map(p=>p[2]),...content.partners.map(p=>p.logo)].filter(value=>value.startsWith("storage:")).map(value=>value.slice(8))))];
+  const ids=[...new Set(contents.flatMap(content=>[...Object.values(content.copy),...content.board.map(p=>p.photo),...content.staff.map(p=>p.photo),...content.partners.map(p=>p.logo)].filter(value=>value.startsWith("storage:")).map(value=>value.slice(8))))];
   return Object.fromEntries(await Promise.all(ids.map(async id=>[`storage:${id}`,await ctx.storage.getUrl(id as Id<"_storage">)])));
 }
 export const published=query({args:{},returns:v.object({content:v.string(),images:v.record(v.string(),v.union(v.string(),v.null()))}),handler:async ctx=>{

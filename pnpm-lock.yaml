@@ -17,6 +17,9 @@ importers:
       '@convex-dev/rate-limiter':
         specifier: ^0.4.2
         version: 0.4.2(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)
+      '@convex-dev/resend':
+        specifier: ^0.2.9
+        version: 0.2.9(convex-helpers@0.1.128(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2))(convex@1.46.0(react@19.3.0))(react@19.3.0)
       convex:
         specifier: ^1.46.0
         version: 1.46.0(react@19.3.0)
@@ -132,10 +135,25 @@ packages:
       react:
         optional: true
 
+  '@convex-dev/batch-worker@0.2.2':
+    resolution: {integrity: sha512-3knigElzTVhWw1sN28EYkGBTdrJZ03vMj2PJPuFq3V0Tg41i7tcv/EWDBFQWcUaKzBWWVw693hcJtxCF3CRtEw==}
+    peerDependencies:
+      convex: ^1.36.1
+      react: ^18.3.1 || ^19.0.0
+
   '@convex-dev/batch-worker@0.3.5':
     resolution: {integrity: sha512-kTxLGy1TXRN6WLcENcoRWWnvPshv1sIZp2EpPqGqCB4FxDI7m8tEHUr+jCLdhGtSZT1UHkWtb1w8YYuEzTxHWQ==}
     peerDependencies:
       convex: ^1.43.0
+
+  '@convex-dev/rate-limiter@0.3.2':
+    resolution: {integrity: sha512-+oBPsBfFbzdxiF/9XaaTQmVnvDlvEfg/c69/v8LxTbw4VLuiflIKlfnPQL8OS0azXQQ11hcPWHmU8ytFmHKDXA==}
+    peerDependencies:
+      convex: ^1.24.8
+      react: ^18.2.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@convex-dev/rate-limiter@0.4.2':
     resolution: {integrity: sha512-njheoDd//MZgxtw+0PP3LL47PVMkvOKZmXDjYglDKSu5IdrfJtGmz/EHd6px9UcALuk/w7LTo83YwQ3bTGsMIg==}
@@ -145,6 +163,18 @@ packages:
     peerDependenciesMeta:
       react:
         optional: true
+
+  '@convex-dev/resend@0.2.9':
+    resolution: {integrity: sha512-4Qx2PTViSKWrcf+yS+nVZT6WNkz/XHus0xicfSd/eB6S8L6FrJH7dTD0fcToPotCm+6F6FTHpR2cHgDfjRP6KQ==}
+    peerDependencies:
+      convex: ^1.43.0
+      convex-helpers: ^0.1.106
+
+  '@convex-dev/workpool@0.4.14':
+    resolution: {integrity: sha512-uTgOlLo7/Sv5OYhb6jjQ/+COAgLhOd1sMfHtJbN5qB298SHJQGoUUab66f6kqfEb8ugD1FnkL0oNZmk6fMqkow==}
+    peerDependencies:
+      convex: ^1.36.1
+      convex-helpers: ^0.1.94
 
   '@esbuild/aix-ppc64@0.27.0':
     resolution: {integrity: sha512-KuZrd2hRjz01y5JK9mEBSD3Vj3mbCvemhT466rSuJYeE/hjuBrHfjjcjMdTm/sz7au+++sdbJZJmuBwQLuw68A==}
@@ -425,6 +455,9 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
+  '@stablelib/base64@1.0.1':
+    resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
+
   '@turbo/darwin-64@2.11.7':
     resolution: {integrity: sha512-Z2LFOxwbiJueD1miByXJS/BrW21vv6YaQXZustty5jEX4vQYw6zyh101Sz1QO7WG0mqBzKagZ/DoAeeujI0/Sw==}
     cpu: [x64]
@@ -662,6 +695,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  fast-sha256@1.3.0:
+    resolution: {integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==}
+
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
     engines: {node: '>=12.0.0'}
@@ -791,6 +827,9 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
+  postal-mime@2.7.6:
+    resolution: {integrity: sha512-UUlyE2KlxmvwMGq060onF/VWU3zD6dVW31FwokQ5v26jWd35fbs2MoTFzh+jXnPwAyV2MULMKXcBInGOl5TO6Q==}
+
   postcss@8.5.29:
     resolution: {integrity: sha512-49cGhUbXj8Qenv0iTMxA1cFBzxXoctpC9Ujd77t1WcbJIr6nF/eI7g/8MgxrYldFRuAXvja7xQRwavoW7kgrxQ==}
     engines: {node: ^10 || ^12 || >=14}
@@ -827,6 +866,19 @@ packages:
     resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
     engines: {node: '>=0.10.0'}
 
+  remeda@2.51.0:
+    resolution: {integrity: sha512-4X/oHoc10jkt1w1V8yG/8tS8jYYj7vaNZs3nrvuDVRE1+nDqRAnX/L0PbwL4wOKcXSLHnkXyOQOinSBGQdJ35A==}
+    engines: {node: '>=18.0.0'}
+
+  resend@6.32.1:
+    resolution: {integrity: sha512-Z9DxkIZt5uvVNkjxjc+r4rCPI0MdDIJ7H+GvU50o9GkhrD0tVTwP6caE8KYEco90sos312l6R72jAEMCBFBiFQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@react-email/render': '*'
+    peerDependenciesMeta:
+      '@react-email/render':
+        optional: true
+
   rolldown@1.2.13:
     resolution: {integrity: sha512-/5apOkwWxtACcQtZ5WlrAsKS4JwXVThQPJZ3RqIruRY9UG9M8e0VlXN068xum/JRKA4aIUoJ13ghe/kGCvidiQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -841,6 +893,15 @@ packages:
   source-map-js@1.2.2:
     resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}
     engines: {node: '>=0.10.0'}
+
+  standardwebhooks@1.0.0:
+    resolution: {integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==}
+
+  standardwebhooks@1.1.1:
+    resolution: {integrity: sha512-bCbX9ZEyFkWPsRz7Bl3NuQUJohmwGSev/yhr7vhaGPlc4AfIrspIRa6cPTBuI1ItmrTDJ4d/S2hCsfe4+vQGnQ==}
+
+  svix@1.99.1:
+    resolution: {integrity: sha512-JfpvbAg5iT5NagDAfOq3e6Ci6NbOMbMm6C3DnfDBB60m2JDK+Z2hXPE9XNAmutb53DCdPoih1V70IbklZnX09A==}
 
   tinyglobby@0.2.17:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
@@ -940,6 +1001,11 @@ snapshots:
     optionalDependencies:
       react: 19.3.0
 
+  '@convex-dev/batch-worker@0.2.2(convex@1.46.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      convex: 1.46.0(react@19.3.0)
+      react: 19.3.0
+
   '@convex-dev/batch-worker@0.3.5(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)':
     dependencies:
       convex: 1.46.0(react@19.3.0)
@@ -950,6 +1016,12 @@ snapshots:
       - react
       - typescript
       - zod
+
+  '@convex-dev/rate-limiter@0.3.2(convex@1.46.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      convex: 1.46.0(react@19.3.0)
+    optionalDependencies:
+      react: 19.3.0
 
   '@convex-dev/rate-limiter@0.4.2(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)':
     dependencies:
@@ -962,6 +1034,27 @@ snapshots:
       - hono
       - typescript
       - zod
+
+  '@convex-dev/resend@0.2.9(convex-helpers@0.1.128(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2))(convex@1.46.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@convex-dev/rate-limiter': 0.3.2(convex@1.46.0(react@19.3.0))(react@19.3.0)
+      '@convex-dev/workpool': 0.4.14(convex-helpers@0.1.128(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2))(convex@1.46.0(react@19.3.0))(react@19.3.0)
+      convex: 1.46.0(react@19.3.0)
+      convex-helpers: 0.1.128(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)
+      remeda: 2.51.0
+      resend: 6.32.1
+      svix: 1.99.1
+    transitivePeerDependencies:
+      - '@react-email/render'
+      - react
+
+  '@convex-dev/workpool@0.4.14(convex-helpers@0.1.128(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2))(convex@1.46.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@convex-dev/batch-worker': 0.2.2(convex@1.46.0(react@19.3.0))(react@19.3.0)
+      convex: 1.46.0(react@19.3.0)
+      convex-helpers: 0.1.128(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)
+    transitivePeerDependencies:
+      - react
 
   '@esbuild/aix-ppc64@0.27.0':
     optional: true
@@ -1106,6 +1199,8 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@stablelib/base64@1.0.1': {}
 
   '@turbo/darwin-64@2.11.7':
     optional: true
@@ -1257,6 +1352,8 @@ snapshots:
       '@esbuild/win32-ia32': 0.27.0
       '@esbuild/win32-x64': 0.27.0
 
+  fast-sha256@1.3.0: {}
+
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
@@ -1338,6 +1435,8 @@ snapshots:
 
   playwright-core@1.64.0: {}
 
+  postal-mime@2.7.6: {}
+
   postcss@8.5.29:
     dependencies:
       nanoid: 3.3.20
@@ -1367,6 +1466,13 @@ snapshots:
 
   react@19.3.0: {}
 
+  remeda@2.51.0: {}
+
+  resend@6.32.1:
+    dependencies:
+      postal-mime: 2.7.6
+      standardwebhooks: 1.1.1
+
   rolldown@1.2.13:
     dependencies:
       '@oxc-project/types': 0.153.0
@@ -1393,6 +1499,20 @@ snapshots:
   server-only@0.0.1: {}
 
   source-map-js@1.2.2: {}
+
+  standardwebhooks@1.0.0:
+    dependencies:
+      '@stablelib/base64': 1.0.1
+      fast-sha256: 1.3.0
+
+  standardwebhooks@1.1.1:
+    dependencies:
+      '@stablelib/base64': 1.0.1
+      fast-sha256: 1.3.0
+
+  svix@1.99.1:
+    dependencies:
+      standardwebhooks: 1.0.0
 
   tinyglobby@0.2.17:
     dependencies:

@@ -9,11 +9,11 @@ if (
 ) {
   void import("./preview");
 } else {
-  void Promise.all([import("./App"), import("./styles.css")]).then(
-    ([{ App }]) => {
+  void Promise.all([import("./App"), import("./components/Toast"), import("./styles.css")]).then(
+    ([{ App }, { ToastProvider }]) => {
       createRoot(document.getElementById("root")!).render(
         <StrictMode>
-          <ConvexAuthProvider client={new ConvexReactClient(import.meta.env.VITE_CONVEX_URL)}><App /></ConvexAuthProvider>
+          <ConvexAuthProvider client={new ConvexReactClient(import.meta.env.VITE_CONVEX_URL)}><ToastProvider><App /></ToastProvider></ConvexAuthProvider>
         </StrictMode>,
       );
     },

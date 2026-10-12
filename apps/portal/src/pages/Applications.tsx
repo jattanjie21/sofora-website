@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { useWorkspace } from "../data/WorkspaceProvider";
+import { useWorkspace } from "../data/workspaceContext";
 import { can, statusLabels, type ApplicationStatus } from "../data/types";
 import {
   Avatar,

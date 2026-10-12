@@ -19,7 +19,7 @@ export type StaffUser = {
 export type DocumentId = PageId;
 export type Activity = {
   id: string;
-  scope: "content" | "applications" | "staff";
+  scope: "content" | "applications" | "contact" | "staff";
   at: string;
   actorId: string;
   message: string;
@@ -39,6 +39,12 @@ export type ApplicationStatus =
   | "approved"
   | "rejected";
 export type ApplicationKind = "membership" | "loan";
+export type ApplicationAttachmentRole = "id" | "photo";
+export type ApplicationAttachment = {
+  role: ApplicationAttachmentRole;
+  storageId: string;
+  url?: string | null;
+};
 type ApplicationBase = {
   revision: number;
   source: "website" | "staff";
@@ -67,6 +73,7 @@ type ApplicationBase = {
     actorId: string;
     at: string;
   } | null;
+  attachments: ApplicationAttachment[];
 };
 export type MembershipApplication = ApplicationBase & {
   kind: "membership";
@@ -96,6 +103,7 @@ export type NewApplication = {
   memberNumber: string;
   purpose: string;
   assigneeId: string;
+  attachments: ApplicationAttachment[];
 };
 export type WorkspaceState = {
   users: StaffUser[];

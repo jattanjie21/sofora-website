@@ -33,7 +33,7 @@ export function SmartLink({
   );
 }
 
-// Photo header with a navy wash, used by the gallery, contact, partners, downloads and application form pages. `children` sits in the bottom row.
+// Photo header with a navy wash, used by the about, history, FAQ, team, gallery, contact, partners, downloads and application form pages. `children` sits in the bottom row.
 export function HeroBanner({
   title,
   intro,
@@ -206,7 +206,7 @@ export function Slider({ slides }: { slides: Slide[] }) {
 }
 
 // A loan or savings product card: the whole card opens the product page.
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, showApply = true }: { product: Product; showApply?: boolean }) {
   const { copy: c } = useWebsite();
   return (
     <article className="product-card">
@@ -222,19 +222,29 @@ export function ProductCard({ product }: { product: Product }) {
           {c["loans.learn-more"]}
           <Icon name="arrow" />
         </span>
-        <Link className="product-card-apply" to={applyPath(product.id)}>
-          {isLoan(product.id) ? c["loans.apply-link"] : c["saving.apply"]}
-        </Link>
+        {showApply ? (
+          <Link className="product-card-apply" to={applyPath(product.id)}>
+            {isLoan(product.id) ? c["loans.apply-link"] : c["saving.apply"]}
+          </Link>
+        ) : null}
       </div>
     </article>
   );
 }
 
-export function ProductGrid({ products, columns = 3 }: { products: Product[]; columns?: 3 | 4 }) {
+export function ProductGrid({
+  products,
+  columns = 3,
+  showApply = true,
+}: {
+  products: Product[];
+  columns?: 3 | 4;
+  showApply?: boolean;
+}) {
   return (
     <div className={`product-grid product-grid-${columns}`}>
       {products.map((product) => (
-        <ProductCard product={product} key={product.id} />
+        <ProductCard product={product} key={product.id} showApply={showApply} />
       ))}
     </div>
   );
@@ -242,60 +252,76 @@ export function ProductGrid({ products, columns = 3 }: { products: Product[]; co
 
 export function HelpBanner() {
   const { copy: c, contact } = useWebsite();
+  const actions = [
+    ["calendar", "shared.help-apply-heading", "shared.help-apply-text", "shared.help-apply-button", "/loan-application-form/"],
+    ["people", "shared.help-staff-heading", "shared.help-staff-text", "shared.help-staff-button", "/staff/"],
+  ] as const;
   return (
     <section className="help-section">
-      <div className="container">
-        <div className="section-title">
+      <div className="container help-layout">
+        <div className="help-intro">
+          <span className="eyebrow">{c["shared.help-eyebrow"]}</span>
           <h2>{c["shared.help-heading"]}</h2>
           <p>{c["shared.help-text"]}</p>
-        </div>
-        <div className="help-grid">
-          <div className="help-item">
-            <Icon name="calendar" />
-            <h3>{c["shared.help-apply-heading"]}</h3>
-            <p>{c["shared.help-apply-text"]}</p>
-            <Link className="btn btn-outline" to="/loan-application-form/">
-              {c["shared.help-apply-button"]}
-            </Link>
+          <div className="help-actions">
+            {actions.map(([icon, heading, text, button, to]) => (
+              <Link className="help-action" to={to} key={to}>
+                <span className="help-action-icon">
+                  <Icon name={icon} />
+                </span>
+                <span className="help-action-body">
+                  <strong>{c[heading]}</strong>
+                  <span>{c[text]}</span>
+                  <span className="help-action-link">{c[button]}</span>
+                </span>
+                <span className="help-action-arrow" aria-hidden="true">
+                  <Icon name="arrow" />
+                </span>
+              </Link>
+            ))}
           </div>
-          <div className="help-item">
+        </div>
+        <aside className="help-contact">
+          <span className="help-contact-icon">
             <Icon name="phone" />
-            <h3>{c["shared.help-call-heading"]}</h3>
-            <p className="help-phones">{contact.phones.join(" | ")}</p>
-            <a className="help-email" href={`mailto:${contact.email}`}>
-              {contact.email}
-            </a>
-            <Link className="btn btn-outline" to="/contact-us/">
-              {c["shared.help-contact-button"]}
-            </Link>
-          </div>
-          <div className="help-item">
-            <Icon name="people" />
-            <h3>{c["shared.help-committee-heading"]}</h3>
-            <p>{c["shared.help-committee-text"]}</p>
-            <Link className="btn btn-outline" to="/loan-team/">
-              {c["shared.help-committee-button"]}
-            </Link>
-          </div>
-        </div>
+          </span>
+          <h3>{c["shared.help-call-heading"]}</h3>
+          <p>{c["shared.help-call-text"]}</p>
+          <ul className="help-phones">
+            {contact.phones.map((phone) => (
+              <li key={phone}>
+                <a href={`tel:${phone.replace(/\s/g, "")}`}>{phone}</a>
+              </li>
+            ))}
+          </ul>
+          <a className="help-email" href={`mailto:${contact.email}`}>
+            <Icon name="mail" />
+            {contact.email}
+          </a>
+        </aside>
       </div>
     </section>
   );
 }
 
-export function PeopleGrid({ people }: { people: Person[] }) {
+// Each card opens the person's profile page at `${basePath}${slug}/`.
+export function PeopleGrid({ people, basePath, viewLabel }: { people: Person[]; basePath: string; viewLabel: string }) {
   return (
     <div className="people-grid">
-      {people.map(([name, role, photo], index) => (
-        <figure className="person" key={index}>
+      {people.map(({ slug, name, role, photo }) => (
+        <Link className="person" key={slug} to={`${basePath}${slug}/`}>
           <div className="person-photo">
             <img src={photo} alt="" loading="lazy" />
           </div>
-          <figcaption>
+          <div className="person-caption">
             <strong>{name}</strong>
             <span>{role}</span>
-          </figcaption>
-        </figure>
+            <em className="person-view">
+              {viewLabel}
+              <Icon name="arrow" />
+            </em>
+          </div>
+        </Link>
       ))}
     </div>
   );

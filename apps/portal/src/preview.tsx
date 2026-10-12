@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { BrowserRouter } from "react-router";
 import { App } from "../../web/src/App";
 import {
   WebsiteContentContext,
   type WebsiteContent,
 } from "../../web/src/data/WebsiteContent";
+import { SiteSkeleton } from "../../web/src/components/Skeleton";
 import "../../web/src/styles.css";
 
 function Preview() {
@@ -27,11 +29,7 @@ function Preview() {
     return () => window.removeEventListener("message", receive);
   }, []);
   if (!content)
-    return (
-      <p style={{ padding: 32 }}>
-        Open a content preview from the staff portal.
-      </p>
-    );
+    return <SiteSkeleton path={window.location.pathname.replace(/^\/preview/, "")} />;
   return (
     <WebsiteContentContext.Provider value={content}>
       <BrowserRouter basename="/preview">
@@ -52,4 +50,9 @@ function Preview() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(<Preview />);
+// Pages with forms call Convex hooks; they skip the actual submit when `preview` is set.
+createRoot(document.getElementById("root")!).render(
+  <ConvexProvider client={new ConvexReactClient(import.meta.env.VITE_CONVEX_URL)}>
+    <Preview />
+  </ConvexProvider>,
+);

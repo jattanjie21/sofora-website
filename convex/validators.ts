@@ -5,9 +5,14 @@ export const role = v.union(v.literal("admin"), v.literal("editor"), v.literal("
 export const documentKey = v.union(...pageIds.map(v.literal));
 export const status = v.union(v.literal("new"), v.literal("in_review"), v.literal("needs_information"), v.literal("recommended"), v.literal("approved"), v.literal("rejected"));
 export const kind = v.union(v.literal("membership"), v.literal("loan"));
-export const activity = v.object({id: v.string(), scope: v.union(v.literal("content"), v.literal("applications"), v.literal("staff")), at: v.string(), actorId: v.string(), message: v.string()});
+export const applicationAttachmentRole = v.union(v.literal("id"), v.literal("photo"));
+export const applicationAttachment = v.object({role: applicationAttachmentRole, storageId: v.id("_storage")});
+export const activity = v.object({id: v.string(), scope: v.union(v.literal("content"), v.literal("applications"), v.literal("contact"), v.literal("staff")), at: v.string(), actorId: v.string(), message: v.string()});
+export const contactInput = v.object({name:v.string(),email:v.string(),phone:v.string(),topic:v.string(),message:v.string()});
+export const contactMessage = v.object({id:v.id("contactMessages"),reference:v.string(),name:v.string(),email:v.string(),phone:v.string(),topic:v.string(),message:v.string(),submittedAt:v.string(),read:v.boolean()});
+export const contactCounts = v.object({total:v.number(),unread:v.number()});
 export const staff = v.object({id: v.id("staff"), name: v.string(), email: v.string(), loginEmail: v.string(), roles: v.array(role), active: v.boolean(), activated: v.boolean()});
-export const applicationInput = v.object({kind, name:v.string(), email:v.string(), phone:v.string(), address:v.string(), occupation:v.string(), purpose:v.string(), membershipType:v.union(v.literal("personal"),v.literal("group"),v.literal("children")), product:v.string(), amount:v.number(), months:v.number(), memberNumber:v.string(), assigneeId:v.union(v.literal(""),v.id("staff"))});
+export const applicationInput = v.object({kind, name:v.string(), email:v.string(), phone:v.string(), address:v.string(), occupation:v.string(), purpose:v.string(), membershipType:v.union(v.literal("personal"),v.literal("group"),v.literal("children")), product:v.string(), amount:v.number(), months:v.number(), memberNumber:v.string(), assigneeId:v.union(v.literal(""),v.id("staff")), attachments:v.array(applicationAttachment)});
 export const applicationFields = {
   ...applicationInput.fields, reference:v.string(), submittedAt:v.string(), status,
   source:v.union(v.literal("website"),v.literal("staff")), revision:v.number(),
@@ -16,6 +21,8 @@ export const applicationFields = {
   decision:v.union(v.null(),v.object({outcome:v.union(v.literal("approved"),v.literal("rejected")),reason:v.string(),actorId:v.id("staff"),at:v.string()})),
 };
 export const application = v.object({...applicationFields,id:v.id("applications"),notes:v.array(activity),history:v.array(activity)});
+export const applicationAttachmentWithUrl = v.object({...applicationAttachment.fields, url:v.union(v.string(),v.null())});
+export const applicationDetail = v.object({...applicationFields,id:v.id("applications"),notes:v.array(activity),history:v.array(activity),attachments:v.array(applicationAttachmentWithUrl)});
 export const applicationAction = v.union(
   v.object({type:v.literal("assign"),userId:v.union(v.literal(""),v.id("staff"))}),
   v.object({type:v.literal("note"),text:v.string()}),
@@ -25,3 +32,5 @@ export const applicationAction = v.union(
   v.object({type:v.literal("decide"),decision:v.union(v.literal("approved"),v.literal("rejected")),text:v.string()}),
 );
 export const counts = v.object({total:v.number(), membership:v.number(), loan:v.number(),new:v.number(),in_review:v.number(),needs_information:v.number(),recommended:v.number(),approved:v.number(),rejected:v.number()});
+export const countKey = v.union(v.literal("applications"), v.literal("contact"));
+export const countValue = v.union(counts, contactCounts);

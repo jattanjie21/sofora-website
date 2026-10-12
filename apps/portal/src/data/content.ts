@@ -1,4 +1,4 @@
-import { copyFields } from "../../../web/src/data/copy";
+import { copyFields, optionalUrl } from "../../../web/src/data/copy";
 import type { WebsiteContent } from "../../../web/src/data/WebsiteContent";
 import type { DocumentId } from "./types";
 
@@ -71,7 +71,7 @@ export function contentError(
     const value = content.copy[field.key];
     if (typeof value !== "string" || (value.length > 12000 && field.kind !== "image"))
       return "One of the content fields is too long.";
-    if (field.kind === "url") {
+    if (field.kind === "url" && !(value === "" && optionalUrl(field.key))) {
       try {
         const url = new URL(value);
         if (url.protocol !== "https:" && url.protocol !== "http:")
@@ -94,11 +94,19 @@ export function contentError(
   const products = id === "loans" ? content.loans : id === "saving" ? content.savings : [];
   if (products.some((product) => productFields.some(([key]) => !product[key].trim())))
     return `Fill in every field of each ${id === "loans" ? "loan" : "savings product"}.`;
-  if (
-    (id === "board" || id === "staff") &&
-    content[id].some(([name, role, photo]) => !name.trim() || !role.trim() || !imagePath.test(photo))
-  )
-    return "Each person needs a name, role and photo.";
+  if (id === "board" || id === "staff") {
+    const slugs = new Set<string>();
+    for (const person of content[id]) {
+      if (!person.name.trim() || !person.role.trim() || !imagePath.test(person.photo))
+        return "Each person needs a name, role and photo.";
+      if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(person.slug))
+        return `The page address for “${person.name}” may only use lowercase letters, numbers and dashes.`;
+      if (slugs.has(person.slug)) return `Two people share the page address “${person.slug}”. Give each one its own.`;
+      slugs.add(person.slug);
+      if (person.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email))
+        return `Enter a valid email address for “${person.name}”, or leave it empty.`;
+    }
+  }
   if (id === "faq" && content.faqs.some((faq) => !faq.question.trim() || !faq.answer.trim()))
     return "Each FAQ needs a question and answer.";
   if (id === "partners")

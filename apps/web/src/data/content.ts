@@ -289,27 +289,181 @@ export const faqs = [
   },
 ];
 
-// [name, role, photo]
-export type Person = [name: string, role: string, photo: string];
+// Board members and staff. Each has a profile page at /board-of-directors/<slug>/ or /staff/<slug>/.
+// `bio` is paragraphs separated by a blank line; `focus` is one item per line. `quote`, `since`, `focus`
+// and `email` may be empty (that part of the profile is hidden). The bios below are placeholder text.
+export type Person = {
+  slug: string;
+  name: string;
+  role: string;
+  photo: string;
+  quote: string;
+  bio: string;
+  since: string;
+  focus: string;
+  email: string;
+};
+export const emptyPerson: Person = { slug: "", name: "", role: "", photo: "/images/board-modou-lamin-badjie.jpg", quote: "", bio: "", since: "", focus: "", email: "" };
+
+// Page address for a name: "Mrs Fatou Kolley Gaye" -> "mrs-fatou-kolley-gaye".
+export function slugify(name: string) {
+  return (
+    name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80)
+      .replace(/-+$/, "") || "person"
+  );
+}
+// Adds -2, -3… when another person already uses the slug.
+export function uniqueSlug(base: string, taken: Iterable<string>) {
+  const used = new Set(taken);
+  let slug = base;
+  for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
+  return slug;
+}
+// Reads a stored people list: older saves hold [name, role, photo] rows, and fields added later are
+// filled from the default person with the same slug (or name).
+export function toPeople(stored: unknown, defaults: Person[]): Person[] {
+  if (!Array.isArray(stored)) return defaults;
+  const taken: string[] = [];
+  return stored.map((item) => {
+    const saved: Partial<Person> = Array.isArray(item) ? { name: item[0], role: item[1], photo: item[2] } : item ?? {};
+    const match = defaults.find((d) => (saved.slug && d.slug === saved.slug) || d.name === saved.name);
+    const person = { ...emptyPerson, ...match, ...saved };
+    person.slug = uniqueSlug(person.slug || slugify(person.name), taken);
+    taken.push(person.slug);
+    return person;
+  });
+}
+const person = (name: string, role: string, photo: string, details: Omit<Person, "slug" | "name" | "role" | "photo" | "email">): Person => ({
+  slug: slugify(name),
+  name,
+  role,
+  photo,
+  email: "",
+  ...details,
+});
 
 export const board: Person[] = [
-  ["Amie Bojang", "Co-opted Member", "/images/board-amie-bojang.jpg"],
-  ["Sonna Baldeh", "Board Member", "/images/board-sonna-baldeh.jpg"],
-  ["Ndey Jarju", "Board Member", "/images/board-ndey-jarju.jpg"],
-  ["Fatou Bojang", "Board Member", "/images/board-fatou-bojang.jpg"],
-  ["Alfusainey Sanneh", "Board Member", "/images/board-alfusainey-sanneh.jpg"],
-  ["Modou Lamin Badjie", "Treasurer", "/images/board-modou-lamin-badjie.jpg"],
-  ["Omar Bah", "Secretary", "/images/board-omar-bah.jpg"],
-  ["Ndey Haddy Badjie", "Vice Chairperson", "/images/board-vice-chairperson.jpg"],
-  ["Mrs Fatou Kolley Gaye", "Chairperson", "/images/board-fatou-kolley-gaye.jpg"],
+  person("Amie Bojang", "Co-opted Member", "/images/board-amie-bojang.jpg", {
+    quote: "A credit union is only as strong as the trust between its members.",
+    bio: `Amie Bojang joined the board as a co-opted member to bring experience in community outreach and women's savings groups.
+
+She works closely with kafo groups across Kanifing and helps the board understand what members need from Sofora's savings and loan products.`,
+    since: "2022",
+    focus: "Community outreach\nWomen's savings groups\nMember education",
+  }),
+  person("Sonna Baldeh", "Board Member", "/images/board-sonna-baldeh.jpg", {
+    quote: "Every member deserves clear answers and fair treatment.",
+    bio: `Sonna Baldeh has been a member of Sofora since its early years and was elected to the board by fellow members.
+
+He sits on the credit committee, reviewing larger loan requests and making sure lending stays responsible and fair.`,
+    since: "2019",
+    focus: "Credit committee\nLoan policy\nMember feedback",
+  }),
+  person("Ndey Jarju", "Board Member", "/images/board-ndey-jarju.jpg", {
+    quote: "Saving a little, often, changes lives.",
+    bio: `Ndey Jarju is a small business owner and long-standing Sofora saver.
+
+On the board she champions savings products for market traders and families, and represents members' views on fees and service.`,
+    since: "2020",
+    focus: "Savings products\nSmall business members\nService quality",
+  }),
+  person("Fatou Bojang", "Board Member", "/images/board-fatou-bojang.jpg", {
+    quote: "Good governance protects every dalasi our members save.",
+    bio: `Fatou Bojang brings a background in administration and record keeping to the board.
+
+She helps oversee Sofora's policies and procedures and supports the annual general meeting each year.`,
+    since: "2021",
+    focus: "Governance\nPolicies and procedures\nAnnual general meeting",
+  }),
+  person("Alfusainey Sanneh", "Board Member", "/images/board-alfusainey-sanneh.jpg", {
+    quote: "We grow stronger when we grow together.",
+    bio: `Alfusainey Sanneh is a teacher and active community volunteer.
+
+He leads the board's work on member education, helping new members understand saving, borrowing and their rights as owners of the credit union.`,
+    since: "2021",
+    focus: "Member education\nYouth and children's savings\nCommunity events",
+  }),
+  person("Modou Lamin Badjie", "Treasurer", "/images/board-modou-lamin-badjie.jpg", {
+    quote: "Transparency in our accounts builds confidence in our future.",
+    bio: `As Treasurer, Modou Lamin Badjie oversees Sofora's finances on behalf of the members.
+
+He works with management on budgets, reviews the monthly accounts and presents the financial report at the annual general meeting.`,
+    since: "2018",
+    focus: "Financial oversight\nBudgets and reporting\nAudit liaison",
+  }),
+  person("Omar Bah", "Secretary", "/images/board-omar-bah.jpg", {
+    quote: "Clear records keep our promises to members.",
+    bio: `Omar Bah serves as Secretary to the board.
+
+He keeps the minutes of board and general meetings, manages board correspondence and makes sure decisions are recorded and followed up.`,
+    since: "2019",
+    focus: "Board minutes\nCorrespondence\nMeeting arrangements",
+  }),
+  person("Ndey Haddy Badjie", "Vice Chairperson", "/images/board-vice-chairperson.jpg", {
+    quote: "Our members are the heart of everything we do.",
+    bio: `Ndey Haddy Badjie supports the Chairperson in leading the board and chairs meetings in her absence.
+
+She has a particular interest in reaching new members and making Sofora welcoming to families and young people.`,
+    since: "2018",
+    focus: "Board leadership\nMembership growth\nPartnerships",
+  }),
+  person("Mrs Fatou Kolley Gaye", "Chairperson", "/images/board-fatou-kolley-gaye.jpg", {
+    quote: "Sofora was built by its members, and it will always be run for them.",
+    bio: `Mrs Fatou Kolley Gaye chairs the board of directors and has been part of Sofora's journey since its founding.
+
+She leads the board in setting the credit union's direction, works closely with the General Manager and represents Sofora with partners such as NACCUG.`,
+    since: "2011",
+    focus: "Strategy and direction\nBoard leadership\nPartner relations",
+  }),
 ];
 
 export const staff: Person[] = [
-  ["Bakary Bojang", "General Manager", "/images/staff-bakary-bojang.jpg"],
-  ["Assan Jarju", "Operation Assistant", "/images/board-modou-lamin-badjie.jpg"],
-  ["Fatoumata Jawara", "Operation Assistant", "/images/staff-fatoumata-jawara.jpg"],
-  ["Fatoumata Sanneh", "Operation Assistant", "/images/staff-fatoumata-sanneh.jpg"],
-  ["Ebrima Jammeh", "Operation & IT Support Assistant", "/images/staff-ebrima-jammeh.jpg"],
+  person("Bakary Bojang", "General Manager", "/images/staff-bakary-bojang.jpg", {
+    quote: "Our job is to make saving and borrowing simple for every member.",
+    bio: `Bakary Bojang leads Sofora's day-to-day operations and the staff team.
+
+He puts the board's plans into action, oversees lending and member services, and is the first point of contact for partners and regulators.`,
+    since: "2015",
+    focus: "Operations\nLoans and lending\nPartners and regulators",
+  }),
+  person("Assan Jarju", "Operation Assistant", "/images/board-modou-lamin-badjie.jpg", {
+    quote: "Every visit to the branch should be quick and friendly.",
+    bio: `Assan Jarju works at the front desk, helping members with deposits, withdrawals and account questions.
+
+He also helps new members complete their registration and understand the documents they need.`,
+    since: "2020",
+    focus: "Deposits and withdrawals\nNew member registration\nAccount enquiries",
+  }),
+  person("Fatoumata Jawara", "Operation Assistant", "/images/staff-fatoumata-jawara.jpg", {
+    quote: "I love seeing members reach their savings goals.",
+    bio: `Fatoumata Jawara supports members with savings accounts, saving boxes and children's savings.
+
+She keeps member records up to date and helps families choose the savings plan that suits them.`,
+    since: "2021",
+    focus: "Savings accounts\nSaving boxes\nChildren's savings",
+  }),
+  person("Fatoumata Sanneh", "Operation Assistant", "/images/staff-fatoumata-sanneh.jpg", {
+    quote: "A good loan starts with a good conversation.",
+    bio: `Fatoumata Sanneh is part of the loan team, guiding members through applications from first enquiry to disbursement.
+
+She checks applications, explains repayment schedules and follows up with members throughout their loan.`,
+    since: "2021",
+    focus: "Loan applications\nRepayment schedules\nMember follow-up",
+  }),
+  person("Ebrima Jammeh", "Operation & IT Support Assistant", "/images/staff-ebrima-jammeh.jpg", {
+    quote: "Technology should make life easier for our members and staff.",
+    bio: `Ebrima Jammeh supports branch operations and looks after Sofora's computers, systems and website.
+
+He helps staff with the member system and keeps records safe and backed up.`,
+    since: "2022",
+    focus: "IT support\nMember system\nWebsite and records",
+  }),
 ];
 
 // Partners page. `logo` and `url` may be empty: no logo shows the name instead, no url makes the card plain.

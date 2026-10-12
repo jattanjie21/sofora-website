@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
-import { useWorkspace } from "../data/WorkspaceProvider";
+import { useWorkspace } from "../data/workspaceContext";
 import { can, type Application } from "../data/types";
 import {
   ActivityList,
@@ -17,6 +17,7 @@ import {
   useFeedback,
   useUnsavedChanges,
 } from "../components/ui";
+import { DetailSkeleton } from "../components/Skeleton";
 
 type ReviewAction =
   | "information"
@@ -34,7 +35,7 @@ const actionTitles: Record<ReviewAction, string> = {
 
 export function ApplicationDetail() {
   const { id } = useParams();
-  const { state, user } = useWorkspace();
+  const { state, user, loadingApplication } = useWorkspace();
   const application = state.applications.find((item) => item.id === id);
   if (!can(user, "applications:view"))
     return (
@@ -42,6 +43,7 @@ export function ApplicationDetail() {
         Your current role cannot view applicant information.
       </EmptyState>
     );
+  if (!application && loadingApplication) return <DetailSkeleton label="Loading application…" />;
   if (!application)
     return (
       <EmptyState
@@ -219,6 +221,37 @@ function Detail({ application }: { application: Application }) {
               </div>
             </dl>
           </section>
+          {application.attachments.length ? (
+            <section className="panel">
+              <div className="panel-heading">
+                <h2>Uploaded documents</h2>
+                <Icon name="image" />
+              </div>
+              <div className="panel-body application-attachments">
+                {application.attachments.map((item) => (
+                  <figure key={item.role} className="application-attachment">
+                    <figcaption>
+                      {item.role === "id" ? "ID card or passport" : "Passport-size photo"}
+                    </figcaption>
+                    {item.url ? (
+                      item.role === "photo" ? (
+                        <a href={item.url} target="_blank" rel="noreferrer">
+                          <img src={item.url} alt="" />
+                        </a>
+                      ) : (
+                        <a className="btn btn-secondary btn-small" href={item.url} target="_blank" rel="noreferrer">
+                          Open ID document
+                          <Icon name="arrow" />
+                        </a>
+                      )
+                    ) : (
+                      <p className="quiet">File unavailable.</p>
+                    )}
+                  </figure>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {application.informationRequest ? (
             <section className="information-card">
               <Icon name="mail" />
@@ -494,7 +527,7 @@ function Detail({ application }: { application: Application }) {
             </div>
           </section>
           <p className="page-note">
-            Decisions are saved to the shared workspace. Contact the applicant separately; no payment or disbursement is triggered.
+            Decisions are saved for the whole team. Contact the applicant separately; no payment or disbursement is triggered.
           </p>
         </aside>
       </div>

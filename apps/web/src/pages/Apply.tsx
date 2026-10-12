@@ -4,9 +4,12 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../../../convex/_generated/api";
 import { useWebsite } from "../data/WebsiteContent";
+import { ApplicationUpload } from "../components/ApplicationUpload";
+import { FormError, SubmitSuccess, useFormTimer } from "../components/SubmitSuccess";
 import { Icon } from "../components/Icon";
 import { HeroBanner, usePageTitle } from "../components/ui";
 import type { NewApplication } from "../../../portal/src/data/types";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 export type FormName = "registration" | "membership" | "kafo" | "loan";
 
@@ -65,6 +68,7 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
   const [params] = useSearchParams();
   const submitApplication = useMutation(api.applications.submit);
   const [requestId] = useState(() => crypto.randomUUID());
+  const elapsed = useFormTimer();
   const kind = formName === "loan" ? "loan" : "membership";
   const requested = params.get("product");
   const [form, setForm] = useState<Omit<NewApplication, "assigneeId">>({
@@ -80,7 +84,10 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
     amount: 0,
     months: 12,
     memberNumber: "",
+    attachments: [],
   });
+  const [idDocument, setIdDocument] = useState<Id<"_storage"> | "">("");
+  const [photoDocument, setPhotoDocument] = useState<Id<"_storage"> | "">("");
   const [consent, setConsent] = useState(false);
   const [website, setWebsite] = useState("");
   const [pending, setPending] = useState(false);
@@ -94,14 +101,32 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
     if (pending) return;
     setPending(true);
     setError("");
+    if (!idDocument || !photoDocument) {
+      setError(c["shared.forms-uploads-missing"]);
+      setPending(false);
+      return;
+    }
     try {
-      const result = await submitApplication({ input: { ...form, assigneeId: "" }, requestId, consent, website });
+      const result = await submitApplication({
+        input: {
+          ...form,
+          assigneeId: "",
+          attachments: [
+            { role: "id", storageId: idDocument },
+            { role: "photo", storageId: photoDocument },
+          ],
+        },
+        requestId,
+        consent,
+        website,
+        elapsedMs: elapsed(),
+      });
       setReference(result.reference);
     } catch (error) {
       setError(
         error instanceof ConvexError && typeof error.data === "string"
           ? error.data
-          : "We couldn’t submit your application. Please try again or contact Sofora.",
+          : c["shared.forms-submit-error"],
       );
     } finally {
       setPending(false);
@@ -110,51 +135,48 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
 
   if (reference)
     return (
-      <div className="application-card application-receipt" role="status">
-        <span className="application-receipt-icon">
-          <Icon name="check" />
-        </span>
-        <h2>Application received</h2>
-        <p>Thank you, {form.name}. Our team will review your application and contact you.</p>
-        <p className="application-reference-label">Your application reference</p>
+      <SubmitSuccess>
+        <h2>{c["shared.forms-success-heading"]}</h2>
+        <p>{c["shared.forms-success-text"].replaceAll("{name}", form.name)}</p>
+        <p className="application-reference-label">{c["shared.forms-reference-label"]}</p>
         <strong>{reference}</strong>
-        <p>Keep this reference for any follow-up. Submitting an application does not confirm membership or loan approval.</p>
+        <p>{c["shared.forms-success-note"]}</p>
         <Link className="btn" to="/">
-          Back to Home
+          {c["shared.forms-home-button"]}
           <Icon name="arrow" />
         </Link>
-      </div>
+      </SubmitSuccess>
     );
 
   const group = formName === "kafo";
   return (
     <div className="application-layout">
       <form className="application-card application-form" onSubmit={submit}>
-        {error ? <p className="field-error" role="alert">{error}</p> : null}
+        <FormError message={error} />
         <fieldset disabled={pending}>
           <legend>
             <span className="legend-step">1</span>
-            {group ? "Organisation details" : "Personal details"}
+            {group ? c["shared.forms-organisation-heading"] : c["shared.forms-personal-heading"]}
           </legend>
           <div className="form-grid">
             <label>
-              {group ? "Organisation’s name" : "Full name"}
+              {group ? c["shared.forms-organisation-name"] : c["shared.forms-name"]}
               <input autoComplete={group ? "organization" : "name"} required maxLength={150} value={form.name} onChange={(e) => change("name", e.target.value)} />
             </label>
             <label>
-              Email address
+              {c["shared.forms-email"]}
               <input type="email" autoComplete="email" required maxLength={254} value={form.email} onChange={(e) => change("email", e.target.value)} />
             </label>
             <label>
-              Phone/Mobile
+              {c["shared.forms-phone"]}
               <input type="tel" autoComplete="tel" required maxLength={30} value={form.phone} onChange={(e) => change("phone", e.target.value)} />
             </label>
             <label>
-              {group ? "Type of organisation / business activity" : "Occupation"}
+              {group ? c["shared.forms-organisation-type"] : c["shared.forms-occupation"]}
               <input required maxLength={200} value={form.occupation} onChange={(e) => change("occupation", e.target.value)} />
             </label>
             <label className="full">
-              Address
+              {c["shared.forms-address"]}
               <textarea autoComplete="street-address" required maxLength={2000} rows={2} value={form.address} onChange={(e) => change("address", e.target.value)} />
             </label>
           </div>
@@ -162,17 +184,17 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
         <fieldset disabled={pending}>
           <legend>
             <span className="legend-step">2</span>
-            {kind === "loan" ? "Loan details" : "Membership"}
+            {kind === "loan" ? c["shared.forms-loan-heading"] : c["shared.forms-membership-heading"]}
           </legend>
           <div className="form-grid">
             {kind === "loan" ? (
               <>
                 <label>
-                  Account number
+                  {c["shared.forms-account-number"]}
                   <input required maxLength={100} value={form.memberNumber} onChange={(e) => change("memberNumber", e.target.value)} />
                 </label>
                 <label>
-                  Purpose of loan
+                  {c["shared.forms-loan-purpose"]}
                   <select value={form.product} onChange={(e) => change("product", e.target.value)}>
                     {loans.map((loan) => (
                       <option key={loan.id} value={loan.id}>{loan.title}</option>
@@ -180,28 +202,55 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
                   </select>
                 </label>
                 <label>
-                  Amount applied (GMD)
+                  {c["shared.forms-loan-amount"]}
                   <input type="number" min="0.01" max="10000000000" step="0.01" required value={form.amount || ""} onChange={(e) => change("amount", Number(e.target.value))} />
                 </label>
                 <label>
-                  Loan duration (months)
+                  {c["shared.forms-loan-months"]}
                   <input type="number" min="1" max="1200" step="1" required value={form.months || ""} onChange={(e) => change("months", Number(e.target.value))} />
                 </label>
               </>
             ) : group ? null : (
               <label>
-                Type of membership
+                {c["shared.forms-membership-type"]}
                 <select value={form.membershipType} onChange={(e) => change("membershipType", e.target.value as typeof form.membershipType)}>
-                  <option value="personal">Personal (sole or joint)</option>
-                  <option value="group">Group / corporate / business</option>
-                  <option value="children">Children’s saving (parent or guardian applies)</option>
+                  <option value="personal">{c["shared.forms-membership-type-personal"]}</option>
+                  <option value="group">{c["shared.forms-membership-type-group"]}</option>
+                  <option value="children">{c["shared.forms-membership-type-children"]}</option>
                 </select>
               </label>
             )}
             <label className="full">
-              {kind === "loan" ? "Tell us more about the loan" : "Monthly saving amount and anything else we should know"}
+              {kind === "loan" ? c["shared.forms-loan-details"] : c["shared.forms-membership-details"]}
               <textarea required maxLength={4000} rows={4} value={form.purpose} onChange={(e) => change("purpose", e.target.value)} />
             </label>
+          </div>
+        </fieldset>
+        <fieldset disabled={pending}>
+          <legend>
+            <span className="legend-step">3</span>
+            {c["shared.forms-uploads-heading"]}
+          </legend>
+          <p className="application-upload-intro">{c["shared.forms-upload-intro"]}</p>
+          <div className="application-upload-grid">
+            <ApplicationUpload
+              label={c["shared.forms-upload-id-label"]}
+              hint={c["shared.forms-upload-id-hint"]}
+              requestId={requestId}
+              role="id"
+              storageId={idDocument}
+              onChange={setIdDocument}
+              disabled={pending}
+            />
+            <ApplicationUpload
+              label={c["shared.forms-upload-photo-label"]}
+              hint={c["shared.forms-upload-photo-hint"]}
+              requestId={requestId}
+              role="photo"
+              storageId={photoDocument}
+              onChange={setPhotoDocument}
+              disabled={pending}
+            />
           </div>
           <label className="application-trap" aria-hidden="true">
             Website
@@ -209,10 +258,11 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
           </label>
           <label className="consent">
             <input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            <span>I confirm these details are accurate and agree that Sofora may use them to review this application and contact me about it.</span>
+            <span>{c["shared.forms-consent"]}</span>
           </label>
-          <button className="btn">
-            {pending ? "Submitting…" : "Submit application"}
+          <button className={`btn${pending ? " is-sending" : ""}`}>
+            {pending ? <span className="btn-spinner" aria-hidden="true" /> : null}
+            {pending ? c["shared.forms-submitting"] : c["shared.forms-submit"]}
             {pending ? null : <Icon name="arrow" />}
           </button>
         </fieldset>
@@ -227,16 +277,16 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
           </ol>
         </div>
         <div className="side-card side-card-navy">
-          <h3>Prefer the paper form?</h3>
-          <p>Download the fillable PDF, complete it and bring it to our branch office with your passport size photo and ID card or passport.</p>
+          <h3>{c["shared.forms-paper-heading"]}</h3>
+          <p>{c["shared.forms-paper-text"]}</p>
           <a className="btn btn-small" href={pdf} download>
             <Icon name="download" />
-            Download PDF
+            {c["shared.forms-paper-button"]}
           </a>
         </div>
         <div className="side-card">
-          <h3>Need help?</h3>
-          <p>Please do not enter ID numbers, bank passwords or card details in this form.</p>
+          <h3>{c["shared.forms-help-heading"]}</h3>
+          <p>{c["shared.forms-help-text"]}</p>
           <ul className="side-contacts">
             {contact.phones[0] ? (
               <li>

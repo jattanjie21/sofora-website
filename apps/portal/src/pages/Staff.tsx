@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useWorkspace } from "../data/WorkspaceProvider";
+import { useWorkspace } from "../data/workspaceContext";
 import { can, roleLabels, type Role, type StaffUser } from "../data/types";
 import {
   Avatar,
@@ -276,7 +276,7 @@ function StaffEditor({
           <p className="quiet">
             {person.id === user.id
               ? "Another Administrator must deactivate your account."
-              : "Inactive accounts cannot access the workspace or receive new assignments."}{" "}
+              : "Inactive accounts cannot sign in to the portal or receive new assignments."}{" "}
             Activated users retain their original sign-in email. This email is used for contact details.
           </p>
           <div className="modal-actions">

@@ -7,7 +7,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router";
-import { useWorkspace } from "./data/WorkspaceProvider";
+import { useWorkspace } from "./data/workspaceContext";
 import { can, type Permission } from "./data/types";
 import { AccountMenu, type AccountAction } from "./components/AccountMenu";
 import { DirtyContext, Icon, Modal, useFeedback } from "./components/ui";
@@ -15,7 +15,7 @@ import { DirtyContext, Icon, Modal, useFeedback } from "./components/ui";
 const navigation: {
   to: string;
   label: string;
-  icon: "home" | "browser" | "briefcase" | "people";
+  icon: "home" | "browser" | "briefcase" | "mail" | "people" | "settings";
   permission?: Permission;
 }[] = [
   { to: "/", label: "Overview", icon: "home" },
@@ -32,9 +32,21 @@ const navigation: {
     permission: "applications:view",
   },
   {
+    to: "/contact",
+    label: "Contact",
+    icon: "mail",
+    permission: "applications:view",
+  },
+  {
     to: "/staff",
     label: "Staff & roles",
     icon: "people",
+    permission: "staff:manage",
+  },
+  {
+    to: "/settings",
+    label: "Settings",
+    icon: "settings",
     permission: "staff:manage",
   },
 ];

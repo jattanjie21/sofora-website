@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useWorkspace } from "../data/WorkspaceProvider";
+import { useWorkspace } from "../data/workspaceContext";
 import { can, type Application, type NewApplication } from "../data/types";
 import {
   BackLink,
@@ -11,6 +11,7 @@ import {
   useFeedback,
   useUnsavedChanges,
 } from "../components/ui";
+import { FormSkeleton } from "../components/Skeleton";
 
 function initialForm(application?: Application): NewApplication {
   return {
@@ -30,12 +31,13 @@ function initialForm(application?: Application): NewApplication {
     amount: application?.kind === "loan" ? application.amount : 50000,
     months: application?.kind === "loan" ? application.months : 24,
     memberNumber: application?.kind === "loan" ? application.memberNumber : "",
+    attachments: application?.attachments?.map(({ role, storageId }) => ({ role, storageId })) ?? [],
   };
 }
 
 export function ApplicationForm() {
   const { id } = useParams();
-  const { state, user } = useWorkspace();
+  const { state, user, loadingApplication } = useWorkspace();
   const application = state.applications.find((item) => item.id === id);
   if (!can(user, "applications:review"))
     return (
@@ -43,6 +45,7 @@ export function ApplicationForm() {
         Your role cannot create or edit applications.
       </EmptyState>
     );
+  if (id && !application && loadingApplication) return <FormSkeleton />;
   if (id && !application)
     return (
       <EmptyState title="Application not found">
@@ -122,7 +125,7 @@ function Form({ application }: { application?: Application }) {
         eyebrow={application?.reference ?? "Make room for a new beginning"}
         title={application ? "Edit applicant details" : "New application"}
       >
-        Record the details shared with your team. Applications are saved to the shared workspace.
+        Record the details shared with your team. Applications are saved for the whole team.
       </PageHeader>
       {message}
       <form onSubmit={submit} className="application-form-layout">

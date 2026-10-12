@@ -9,6 +9,7 @@ import { Contact } from "./pages/Contact";
 import { Partners } from "./pages/Partners";
 import { Apply } from "./pages/Apply";
 import { NotFound } from "./pages/NotFound";
+import { PersonProfile } from "./pages/Person";
 
 // Routes keep the original WordPress addresses so existing links still work
 // (/loan-services/ and /saving/ now redirect into /services/).
@@ -22,6 +23,8 @@ export function App({ preview = false }: { preview?: boolean }) {
         <Route path="faq" element={<Faq />} />
         <Route path="board-of-directors" element={<Board />} />
         <Route path="staff" element={<Staff />} />
+        <Route path="board-of-directors/:slug" element={<PersonProfile group="board" />} />
+        <Route path="staff/:slug" element={<PersonProfile group="staff" />} />
         <Route path="loan-team" element={<Staff loanTeam />} />
         <Route path="services" element={<ServicesHub />} />
         <Route path="services/:slug" element={<ServiceDetail />} />
@@ -31,7 +34,7 @@ export function App({ preview = false }: { preview?: boolean }) {
         <Route path="blog" element={<Blog />} />
         <Route path="photo-gallery" element={<PhotoGallery />} />
         <Route path="youtube-gallery" element={<YouTubeGallery />} />
-        <Route path="contact-us" element={<Contact />} />
+        <Route path="contact-us" element={<Contact preview={preview} />} />
         <Route path="partners" element={<Partners />} />
         <Route path="registration-form" element={<Apply form="registration" preview={preview} />} />
         <Route path="membership-application-form" element={<Apply form="membership" preview={preview} />} />

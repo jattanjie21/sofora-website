@@ -10,7 +10,8 @@ import {
 import { Link } from "react-router";
 import { ConvexError } from "convex/values";
 import { Icon } from "../../../web/src/components/Icon";
-import { useWorkspace } from "../data/WorkspaceProvider";
+import { useWorkspace } from "../data/workspaceContext";
+import { useToast } from "./Toast";
 import {
   statusLabels,
   type Activity,
@@ -216,12 +217,17 @@ export function useFeedback() {
   } | null>(null);
   const inFlight = useRef(false);
   const [pending, setPending] = useState(false);
+  const toast = useToast();
   async function run(action: () => unknown | Promise<unknown>, success: string) {
     if (inFlight.current) return false;
     inFlight.current = true; setPending(true);
     try {
       await action();
-      setFeedback({ text: success, error: false });
+      // Confirmations pop up as a toast (they survive navigating away); inline only without a provider.
+      if (toast) {
+        setFeedback(null);
+        toast(success);
+      } else setFeedback({ text: success, error: false });
       return true;
     } catch (error) {
       setFeedback({

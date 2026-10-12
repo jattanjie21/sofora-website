@@ -106,7 +106,7 @@ function HomePage() {
               <Icon name="arrow" />
             </Link>
           </div>
-          <ProductGrid products={loans.slice(0, 3)} />
+          <ProductGrid products={loans.slice(0, 3)} showApply={false} />
         </div>
       </section>
 

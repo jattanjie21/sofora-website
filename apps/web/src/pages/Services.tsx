@@ -65,7 +65,7 @@ export function ServicesHub() {
             <h2>{c["loans.products-heading"]}</h2>
             <p>{c["loans.products-text"]}</p>
           </div>
-          <ProductGrid products={loans} columns={4} />
+          <ProductGrid products={loans} columns={4} showApply={false} />
         </div>
       </section>
 
@@ -75,7 +75,7 @@ export function ServicesHub() {
             <h2>{c["saving.heading"]}</h2>
             <p>{c["saving.p1"]}</p>
           </div>
-          <ProductGrid products={savings} columns={4} />
+          <ProductGrid products={savings} columns={4} showApply={false} />
         </div>
       </section>
 
@@ -154,18 +154,15 @@ export function ServicesHub() {
 }
 
 // Navy hero over the shared header photo, used by the services hub and every product page.
-// The breadcrumb shows only when `crumbs` are given (product pages, not the hub).
 function ServiceHero({
   title,
   kicker,
   overlap = false,
-  crumbs = [],
   children,
 }: {
   title: string;
   kicker?: string;
   overlap?: boolean;
-  crumbs?: [label: string, to: string][];
   children: ReactNode;
 }) {
   const { copy: c } = useWebsite();
@@ -173,19 +170,6 @@ function ServiceHero({
   return (
     <section className={`service-hero${overlap ? " service-hero-overlap" : ""}`} style={{ "--hero-image": `url("${c["shared.header-image"]}")` } as CSSProperties}>
       <div className="container">
-        {crumbs.length ? (
-          <nav className="service-hero-crumbs" aria-label="Breadcrumb">
-            <Link to="/">{c["shared.name"]}</Link>
-            {crumbs.map(([label, to]) => (
-              <span key={to}>
-                <Icon name="chevronRight" />
-                <Link to={to}>{label}</Link>
-              </span>
-            ))}
-            <Icon name="chevronRight" />
-            <span aria-current="page">{title}</span>
-          </nav>
-        ) : null}
         {kicker ? <p className="service-hero-kicker">{kicker}</p> : null}
         <h1>{title}</h1>
         {children}
@@ -218,7 +202,6 @@ function ServicePage({ product }: { product: Product }) {
       <ServiceHero
         title={product.title}
         kicker={loan ? c["loans.detail-kicker"] : c["saving.detail-kicker"]}
-        crumbs={[[c["shared.nav-services"], "/services/"]]}
       >
         <div className="service-hero-grid service-hero-product">
           <div>
@@ -333,7 +316,7 @@ function ServicePage({ product }: { product: Product }) {
               <Icon name="arrow" />
             </Link>
           </div>
-          <ProductGrid products={related} />
+          <ProductGrid products={related} showApply={false} />
         </div>
       </section>
       <ServicesCta />

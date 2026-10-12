@@ -35,8 +35,8 @@ function entries(content: WebsiteContent): Entry[] {
   for (const [page, [titleKey, path]] of Object.entries(pagePaths) as [PageId, [keyof typeof c, string]][]) {
     const extra =
       page === "faq" ? content.faqs.map((f) => `${f.question} ${f.answer}`)
-      : page === "board" ? content.board.map(([name, role]) => `${name} ${role}`)
-      : page === "staff" ? content.staff.map(([name, role]) => `${name} ${role}`)
+      : page === "board" ? content.board.map(({ name, role }) => `${name} ${role}`)
+      : page === "staff" ? content.staff.map(({ name, role }) => `${name} ${role}`)
       : page === "contact" ? [content.contact.address, content.contact.email, ...content.contact.phones]
       : page === "partners" ? content.partners.map((p) => `${p.name} ${p.fullName}`)
       : [];
@@ -48,6 +48,13 @@ function entries(content: WebsiteContent): Entry[] {
       path: servicePath(product.id),
       text: [product.description, product.audience, product.benefits, product.requirements, product.steps].join(" "),
     });
+  for (const [group, base] of [["board", "/board-of-directors/"], ["staff", "/staff/"]] as const)
+    for (const person of content[group])
+      list.push({
+        title: person.name,
+        path: `${base}${person.slug}/`,
+        text: [person.role, person.quote, person.bio, person.focus].join(" "),
+      });
   for (const [key, path, text] of [
     ["shared.nav-registration-form", "/registration-form/", "membership registration apply join"],
     ["shared.nav-membership-form", "/membership-application-form/", "membership application apply join sole joint"],

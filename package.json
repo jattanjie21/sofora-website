@@ -27,6 +27,7 @@
     "@auth/core": "0.41.1",
     "@convex-dev/auth": "^0.0.96",
     "@convex-dev/rate-limiter": "^0.4.2",
+    "@convex-dev/resend": "^0.2.9",
     "convex": "^1.46.0",
     "convex-helpers": "^0.1.128"
   }

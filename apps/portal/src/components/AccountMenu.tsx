@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
-import { useWorkspace } from "../data/WorkspaceProvider";
+import { useWorkspace } from "../data/workspaceContext";
 import { roleLabels } from "../data/types";
 import { Avatar, Icon } from "./ui";
 
@@ -63,9 +63,6 @@ export function AccountMenu({
           <strong>{user.name}</strong>
           <small title={roles}>{roles}</small>
         </span>
-        <span className={`account-chevron${open ? " is-open" : ""}`}>
-          <Icon name="arrow" />
-        </span>
       </button>
       {open ? (
         <div
@@ -84,13 +81,13 @@ export function AccountMenu({
             to="/profile"
             onClick={() => setOpen(false)}
           >
-            <Icon name="people" /> My profile <span aria-hidden="true">→</span>
+            <Icon name="people" /> My profile
           </Link>
           <button
             className="account-action account-logout"
             onClick={() => choose({ type: "logout" })}
           >
-            <Icon name="arrow" /> Log out
+            Log out
           </button>
         </div>
       ) : null}

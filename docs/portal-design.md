@@ -14,12 +14,14 @@ How the public website, the staff portal and Convex fit together. Current as of 
 1. `apps/web/src/data/copy.ts` lists every editable field (page, section, label, key, default, kind) and `content.ts` holds the lists (loans, savings products, FAQs, board, staff, contact). Together they are the default content.
 2. Convex stores one `pages` row per page id, holding that page's fields as JSON. `setup:initialize` seeds the rows from the defaults; `setup:resetPages` replaces them.
 3. `content.published` merges the stored rows over the defaults. The public site loads it in `LiveWebsite.tsx` and re-renders when it changes. Fields missing from a stored row fall back to the default, so adding a field needs no migration.
-4. The portal's Website content screen lists the pages in `documents` (`apps/portal/src/data/content.ts`). Its editor is generated from the `copy.ts` rows, with extra editors for lists and photos in `ContentFields.tsx`.
-5. The Preview tab renders the real public components in an iframe at `/preview/...` in the portal, fed by `postMessage`. `pnpm screenshot` reuses this route.
+4. The portal's Website content screen lists the pages in `documents` (`apps/portal/src/data/content.ts`). Its editor is generated from the `copy.ts` rows, with extra editors for lists and photos in `ContentFields.tsx`. The editor shows one section at a time, picked from a menu on the left (a drop-down on phones): each `copy.ts` section is one entry, and a page's list (people, products, FAQs, partners, contact details) joins the section of the same name or gets its own (`pageSections`). Each section has its own Save button, which saves only that section's changes (`applySection`); unsaved sections are marked with a dot.
+5. The Preview tab renders the real public components in an iframe at `/preview/...` in the portal, fed by `postMessage`. Pages get `preview` set, so their forms render but don't submit. `pnpm screenshot` reuses this route by default.
 
-## Applications
+## Applications and contact
 
 The four public forms (`apps/web/src/pages/Apply.tsx`) call `applications.submit`. Applications appear in the portal's queue, where officers assign, add notes, request information and recommend, and administrators approve or reject. Staff can also enter applications by hand.
+
+The contact page form (`apps/web/src/pages/Contact.tsx`) calls `contact.submit`. Messages appear in the portal **Contact** inbox (same access as applications). Opening a message marks it read and offers a reply-by-email link to the visitor's address.
 
 ## Accounts
 
