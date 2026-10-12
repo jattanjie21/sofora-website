@@ -145,6 +145,7 @@ export const imageLibrary: { path: string; title: string }[] = [
   ["rate-personal.svg", "Icon: personal loan"],
   ["rate-agriculture.svg", "Icon: agriculture"],
   ["rate-education.svg", "Icon: education"],
+  ["rate-business.svg", "Icon: business loan"],
   ["news-online-enquiry.jpg", "News: online enquiry"],
   ["news-evolution.jpg", "News: evolution of Sofora"],
   ["evolution-1.jpg", "Solidarity group meeting"],

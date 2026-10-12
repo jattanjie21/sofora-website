@@ -122,7 +122,7 @@ export function PortalShell() {
           }}
         >
           <Link className="portal-brand" to="/">
-            <img src="/images/sofora-logo.png" width="43" height="43" alt="" />
+            <img src="/images/sofora-logo.png" width="56" height="56" alt="" />
             <span>
               <strong>
                 SOFORA<span>.</span>

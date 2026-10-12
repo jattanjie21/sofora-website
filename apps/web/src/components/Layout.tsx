@@ -73,7 +73,7 @@ const samePage = (a: string, b: string) =>
   a.replace(/\/+$/, "") === b.replace(/\/+$/, "");
 
 function Header() {
-  const { copy: c } = useWebsite();
+  const { copy: c, contact } = useWebsite();
   const menu = useMenu();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -89,7 +89,31 @@ function Header() {
   return (
     <>
       <div className="top-bar">
-        <div className="container">{c["shared.topbar"]}</div>
+        <div className="container container-wide top-bar-inner">
+          <p className="top-bar-welcome">{c["shared.topbar"]}</p>
+          <ul className="top-bar-links">
+            {contact.phones[0] && (
+              <li>
+                <a href={`tel:${contact.phones[0].replace(/\s+/g, "")}`}>
+                  <Icon name="phone" />
+                  <span>{contact.phones[0]}</span>
+                </a>
+              </li>
+            )}
+            <li className="top-bar-email">
+              <a href={`mailto:${contact.email}`}>
+                <Icon name="mail" />
+                <span>{contact.email}</span>
+              </a>
+            </li>
+            <li>
+              <SmartLink to={c["shared.member-login-url"]} className="top-bar-login">
+                <Icon name="user" />
+                <span>{c["shared.nav-member-login"]}</span>
+              </SmartLink>
+            </li>
+          </ul>
+        </div>
       </div>
       <header
         className="site-header"
@@ -105,9 +129,9 @@ function Header() {
           }
         }}
       >
-        <div className="container header-inner">
+        <div className="container container-wide header-inner">
           <Link to="/" className="logo" aria-label={c["shared.name"]}>
-            <img src={c["shared.logo"]} alt={c["shared.name"]} width="66" height="66" />
+            <img src={c["shared.logo"]} alt={c["shared.name"]} width="84" height="84" />
           </Link>
           <button
             ref={toggle}
@@ -198,9 +222,9 @@ function Footer() {
   const { copy: c } = useWebsite();
   return (
     <footer className="site-footer">
-      <div className="container footer-main">
+      <div className="container container-wide footer-main">
         <Link to="/" aria-label={c["shared.name"]}>
-          <img src={c["shared.footer-logo"]} alt={c["shared.name"]} width="66" height="66" />
+          <img src={c["shared.footer-logo"]} alt={c["shared.name"]} width="96" height="96" />
         </Link>
         <a className="footer-social" href={c["shared.twitter-url"]} target="_blank" rel="noreferrer">
           <Icon name="twitter" />
@@ -208,7 +232,7 @@ function Footer() {
         </a>
       </div>
       <div className="footer-bottom">
-        <div className="container">
+        <div className="container container-wide">
           Copyright {new Date().getFullYear()} | {c["shared.copyright"]}
         </div>
       </div>
