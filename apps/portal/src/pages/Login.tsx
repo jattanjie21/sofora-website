@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Navigate, useLocation } from "react-router";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 import { Field, Icon, useFeedback } from "../components/ui";
 import { Bone } from "../components/Skeleton";
 
@@ -14,6 +15,9 @@ export function Login() {
   const [email, setEmail] = useState(params.get("email") ?? "");
   const [password, setPassword] = useState("");
   const { run, message, pending } = useFeedback();
+  // Usernames ("admin") work wherever the backend has dev logins on: locally and on the test site.
+  const devLogins = useQuery(api.devLogins.enabled);
+  const usernames = import.meta.env.DEV || devLogins === true;
   const requestedPath: unknown = location.state?.from;
   const destination =
     typeof requestedPath === "string" &&
@@ -65,9 +69,9 @@ export function Login() {
           {invitation ? <p className="login-lead">Choose your own password to finish setting up your staff account.</p> : null}
           {message}
           <form onSubmit={submit}>
-            <Field label={import.meta.env.DEV ? "Email address or username" : "Email address"}>
+            <Field label={usernames ? "Email address or username" : "Email address"}>
               <input
-                type={import.meta.env.DEV ? "text" : "email"}
+                type={usernames ? "text" : "email"}
                 name="email"
                 autoComplete="username"
                 required

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, NavLink, useSearchParams } from "react-router";
 import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
+import { readableError } from "../data/errors";
 import { api } from "../../../../convex/_generated/api";
 import { useWebsite } from "../data/WebsiteContent";
 import { ApplicationUpload } from "../components/ApplicationUpload";
@@ -123,11 +123,7 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
       });
       setReference(result.reference);
     } catch (error) {
-      setError(
-        error instanceof ConvexError && typeof error.data === "string"
-          ? error.data
-          : c["shared.forms-submit-error"],
-      );
+      setError(readableError(error, c["shared.forms-submit-error"]));
     } finally {
       setPending(false);
     }

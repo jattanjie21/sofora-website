@@ -2,7 +2,7 @@
 // Runs only on deployments with the DEV_LOGINS=true environment variable (set on the dev deployment only).
 import { v } from "convex/values";
 import { createAccount, modifyAccountCredentials } from "@convex-dev/auth/server";
-import { internalAction, internalMutation } from "./_generated/server";
+import { internalAction, internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { hash } from "./lib/access";
 
@@ -13,6 +13,9 @@ const DEV_PASSWORD = "admin";
 export function devLoginsEnabled() {
   return process.env.DEV_LOGINS === "true";
 }
+
+// Public: lets the login page accept the "admin" username on test deployments (local or Vercel).
+export const enabled = query({ args: {}, returns: v.boolean(), handler: async () => devLoginsEnabled() });
 
 export const prepareAdmin = internalMutation({args:{invitationHash:v.string()},returns:v.union(v.literal("activated"),v.literal("invited")),handler:async(ctx,{invitationHash})=>{
   if(!await ctx.db.query("pages").first()) throw new Error("Initialise the workspace with setup:initialize first.");

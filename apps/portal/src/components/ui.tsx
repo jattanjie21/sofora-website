@@ -8,10 +8,10 @@ import {
   type ReactNode,
 } from "react";
 import { Link } from "react-router";
-import { ConvexError } from "convex/values";
 import { Icon } from "../../../web/src/components/Icon";
 import { useWorkspace } from "../data/workspaceContext";
 import { useToast } from "./Toast";
+import { readableError } from "../../../web/src/data/errors";
 import {
   statusLabels,
   type Activity,
@@ -230,15 +230,7 @@ export function useFeedback() {
       } else setFeedback({ text: success, error: false });
       return true;
     } catch (error) {
-      setFeedback({
-        text:
-          error instanceof ConvexError && typeof error.data === "string"
-            ? error.data
-            : error instanceof Error
-            ? error.message
-            : "The action could not be completed.",
-        error: true,
-      });
+      setFeedback({ text: readableError(error), error: true });
       return false;
     } finally { inFlight.current = false; setPending(false); }
   }

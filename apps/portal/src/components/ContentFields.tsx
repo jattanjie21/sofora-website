@@ -10,6 +10,7 @@ import { useWorkspace } from "../data/workspaceContext";
 import type { DocumentId } from "../data/types";
 import { Field, Icon } from "./ui";
 import { Bone } from "./Skeleton";
+import { readableError } from "../../../web/src/data/errors";
 
 // Labels, buttons and other one-liners get a single-line box; paragraphs get a box that grows as you type.
 const isShort = (text = "") => text.length <= 60 && !text.includes("\n");
@@ -50,7 +51,7 @@ function ImageField({
       if(!response.ok) throw new Error("Photo upload failed. Please try again.");
       const {storageId}=await response.json();
       onChange(await register({storageId}));
-    } catch(error) {setError(error instanceof Error?error.message:"Photo upload failed.");}
+    } catch(error) {setError(readableError(error,"Photo upload failed. Please try again."));}
     finally {setUploading(false);}
   }
 

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
+import { readableError } from "../data/errors";
 import { api } from "../../../../convex/_generated/api";
 import { useWebsite } from "../data/WebsiteContent";
 import { Icon } from "../components/Icon";
@@ -109,11 +109,7 @@ function ContactForm({ preview }: { preview: boolean }) {
       const result = await submitMessage({ input: form, requestId, website, elapsedMs: elapsed() });
       setReference(result.reference);
     } catch (submitError) {
-      setError(
-        submitError instanceof ConvexError && typeof submitError.data === "string"
-          ? submitError.data
-          : c["contact.form-error"],
-      );
+      setError(readableError(submitError, c["contact.form-error"]));
     } finally {
       setPending(false);
     }

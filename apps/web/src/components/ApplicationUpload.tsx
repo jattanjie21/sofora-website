@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useWebsite } from "../data/WebsiteContent";
+import { readableError } from "../data/errors";
 import { Icon } from "./Icon";
 
 const accept = "image/png,image/jpeg,image/webp,application/pdf";
@@ -55,7 +56,7 @@ export function ApplicationUpload({
       onChange(uploaded);
       setPreview(file.type === "application/pdf" ? "" : URL.createObjectURL(file));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : c["shared.forms-upload-failed"]);
+      setError(readableError(caught, c["shared.forms-upload-failed"]));
       onChange("");
     } finally {
       setUploading(false);
