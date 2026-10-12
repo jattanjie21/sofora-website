@@ -1,5 +1,7 @@
 # Deploying to Vercel and Convex
 
+**Current setup (October 2026):** Vercel projects `sofora-web` (https://sofora-web.vercel.app, root `apps/web`) and `sofora-portal` (https://sofora-portal.vercel.app, root `apps/portal`) in the "Modou Lamin Jatta's projects" team, both connected to `jattanjie21/sofora-website` with `main` as the production branch. Convex production deployment: `earnest-bass-501` (`https://earnest-bass-501.convex.cloud`). Custom domains are not attached yet; soforaccu.com still serves the old site.
+
 The repo deploys as **two Vercel projects** (website and staff portal) from the same GitHub repo, plus **one Convex production deployment** that both use.
 
 | Piece | Where | Notes |

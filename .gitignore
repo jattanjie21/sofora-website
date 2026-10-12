@@ -10,3 +10,4 @@ admin-activation.local.md
 
 .pnpm-store/
 .dev/
+.vercel/
