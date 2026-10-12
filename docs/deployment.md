@@ -2,6 +2,10 @@
 
 **Current setup (October 2026):** Vercel projects `sofora-web` (https://sofora-web.vercel.app, root `apps/web`) and `sofora-portal` (https://sofora-portal.vercel.app, root `apps/portal`) in the "Modou Lamin Jatta's projects" team, both connected to `jattanjie21/sofora-website` with `main` as the production branch. Convex production deployment: `earnest-bass-501` (`https://earnest-bass-501.convex.cloud`). Custom domains are not attached yet; soforaccu.com still serves the old site.
 
+**Testing phase:** until the client signs off, both Vercel projects build against the **dev** Convex deployment (`VITE_CONVEX_URL=https://jovial-ptarmigan-163.eu-west-1.convex.cloud`, no `CONVEX_DEPLOY_KEY`). Dev has `EMAIL_LIVE=true` (real emails), `SITE_URL=https://sofora-portal.vercel.app` (email links) and still `DEV_LOGINS=true`, so `admin@sofora.test` / `admin` signs in on the public portal; unset `DEV_LOGINS` if the testing link is shared widely. Production (`earnest-bass-501`) has the functions deployed plus `SITE_URL` and `EMAIL_LIVE`, but no auth keys, Resend key or data yet.
+
+**Moving to production:** follow steps 1 to 5 below (auth keys, `RESEND_API_KEY`, `setup:initialize`), set `VITE_CONVEX_URL` on both Vercel projects to `https://earnest-bass-501.convex.cloud`, add `CONVEX_DEPLOY_KEY` (production) to `sofora-web`, redeploy both, and on dev set `EMAIL_LIVE` back off and `SITE_URL` back to `http://127.0.0.1:5174`. Website content edited on dev during testing does not move automatically; re-enter it in the production portal or export/import it.
+
 The repo deploys as **two Vercel projects** (website and staff portal) from the same GitHub repo, plus **one Convex production deployment** that both use.
 
 | Piece | Where | Notes |
