@@ -1,44 +1,39 @@
 import { Route, Routes } from "react-router";
 import { Layout } from "./components/Layout";
-import { ButtonLink, PageHero } from "./components/ui";
 import { Home } from "./pages/Home";
-import { About } from "./pages/About";
-import { Savings } from "./pages/Savings";
-import { Loans } from "./pages/Loans";
-import { Membership } from "./pages/Membership";
-import { Community } from "./pages/Community";
+import { About, Board, Faq, History, Staff } from "./pages/About";
+import { Downloads, LoanServices, Saving } from "./pages/Services";
+import { Blog, BlogPost } from "./pages/Blog";
+import { PhotoGallery, YouTubeGallery } from "./pages/Gallery";
 import { Contact } from "./pages/Contact";
 import { Apply } from "./pages/Apply";
+import { NotFound } from "./pages/NotFound";
 
+// Routes keep the original WordPress addresses so existing links still work.
 export function App({ preview = false }: { preview?: boolean }) {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="about" element={<About />} />
-        <Route path="savings" element={<Savings />} />
-        <Route path="loans" element={<Loans />} />
-        <Route path="membership" element={<Membership />} />
-        <Route path="community" element={<Community />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="apply/:kind" element={<Apply preview={preview} />} />
-        <Route
-          path="*"
-          element={
-            <>
-              <PageHero
-                eyebrow="404 · A small detour"
-                title="Let’s get you back on track."
-              >
-                The page you’re looking for isn’t here. There’s plenty to
-                discover at Sofora.
-              </PageHero>
-              <div className="container section">
-                <ButtonLink to="/">Back to home</ButtonLink>
-              </div>
-            </>
-          }
-        />
+        <Route path="about-us" element={<About />} />
+        <Route path="history" element={<History />} />
+        <Route path="faq" element={<Faq />} />
+        <Route path="board-of-directors" element={<Board />} />
+        <Route path="staff" element={<Staff />} />
+        <Route path="loan-team" element={<Staff loanTeam />} />
+        <Route path="loan-services" element={<LoanServices />} />
+        <Route path="saving" element={<Saving />} />
+        <Route path="downloads" element={<Downloads />} />
+        <Route path="blog" element={<Blog />} />
+        <Route path="photo-gallery" element={<PhotoGallery />} />
+        <Route path="youtube-gallery" element={<YouTubeGallery />} />
+        <Route path="contact-us" element={<Contact />} />
+        <Route path="registration-form" element={<Apply form="registration" preview={preview} />} />
+        <Route path="membership-application-form" element={<Apply form="membership" preview={preview} />} />
+        <Route path="kafo-application-form" element={<Apply form="kafo" preview={preview} />} />
+        <Route path="loan-application-form" element={<Apply form="loan" preview={preview} />} />
+        <Route path=":slug" element={<BlogPost />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

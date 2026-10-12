@@ -2,23 +2,18 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useState } from "react";
-import { copyFields, type CopyField } from "../../../web/src/data/copy";
+import { copyFields } from "../../../web/src/data/copy";
+import { imageLibrary } from "../../../web/src/data/content";
 import type { WebsiteContent } from "../../../web/src/data/WebsiteContent";
 import type { DocumentId } from "../data/types";
 import { Field, Icon } from "./ui";
 
-const images = [
-  { path: "/images/sofora-community.jpg", title: "Sofora community" },
-  { path: "/images/savings-boxes.jpeg", title: "Community savings boxes" },
-  { path: "/images/sofora-logo.png", title: "Sofora logo" },
-];
-
 function ImageField({
-  field,
+  label,
   value,
   onChange,
 }: {
-  field: CopyField;
+  label: string;
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -54,12 +49,12 @@ function ImageField({
     <div className="image-field">
       <img src={value.startsWith("storage:") ? resolved ?? "/images/sofora-logo.png" : value} alt="Current content image" />
       <div>
-        <Field label={field.label}>
+        <Field label={label}>
           <select
             value={value.startsWith("storage:") ? "custom" : value}
             onChange={(event) => onChange(event.target.value)}
           >
-            {images.map((image) => (
+            {imageLibrary.map((image) => (
               <option key={image.path} value={image.path}>
                 {image.title}
               </option>
@@ -164,7 +159,7 @@ export function ContentFields({
                   field.kind === "image" ? (
                     <ImageField
                       key={field.key}
-                      field={field}
+                      label={field.label}
                       value={content.copy[field.key]}
                       onChange={(value) =>
                         update((next) => {
@@ -206,24 +201,24 @@ export function ContentFields({
             No matching copy fields. Try another search.
           </p>
         ) : null}
-        {id === "savings" || id === "loans" ? (
+        {id === "loans" ? (
           <details className="editor-section" open>
             <summary>
-              <span>Product descriptions</span>
+              <span>Loan products</span>
               <Icon name="plus" />
             </summary>
             <div className="editor-section-body">
-              {content[id].map((product, index) => (
+              {content.loans.map((product, index) => (
                 <div className="repeat-item" key={product.id}>
                   <p className="kicker">
-                    Product {index + 1} · {product.id}
+                    Loan {index + 1}
                   </p>
                   <Field label="Product name">
                     <input
                       value={product.title}
                       onChange={(event) =>
                         update((next) => {
-                          next[id][index]!.title = event.target.value;
+                          next.loans[index]!.title = event.target.value;
                         })
                       }
                     />
@@ -234,7 +229,7 @@ export function ContentFields({
                       value={product.description}
                       onChange={(event) =>
                         update((next) => {
-                          next[id][index]!.description = event.target.value;
+                          next.loans[index]!.description = event.target.value;
                         })
                       }
                     />
@@ -289,14 +284,14 @@ export function ContentFields({
             </div>
           </details>
         ) : null}
-        {id === "about"
-          ? (["board", "staff"] as const).map((directory) => (
+        {id === "board" || id === "staff"
+          ? ([id] as const).map((directory) => (
               <details className="editor-section" open key={directory}>
                 <summary>
                   <span>
                     {directory === "board"
                       ? "Board of directors"
-                      : "Public staff directory"}
+                      : "Staff and loan team"}
                   </span>
                   <Icon name="plus" />
                 </summary>
@@ -305,7 +300,7 @@ export function ContentFields({
                     These are the public website’s people listings, separate
                     from portal accounts.
                   </p>
-                  {content[directory].map(([name, role], index) => (
+                  {content[directory].map(([name, role, photo], index) => (
                     <div className="repeat-item" key={index}>
                       <div className="two-fields">
                         <Field label="Name">
@@ -329,6 +324,15 @@ export function ContentFields({
                           />
                         </Field>
                       </div>
+                      <ImageField
+                        label="Photo"
+                        value={photo}
+                        onChange={(value) =>
+                          update((next) => {
+                            next[directory][index]![2] = value;
+                          })
+                        }
+                      />
                       <button
                         className="text-button danger-text"
                         type="button"
@@ -347,7 +351,7 @@ export function ContentFields({
                     type="button"
                     onClick={() =>
                       update((next) => {
-                        next[directory].push(["", ""]);
+                        next[directory].push(["", "", "/images/board-modou-lamin-badjie.jpg"]);
                       })
                     }
                   >
@@ -358,7 +362,7 @@ export function ContentFields({
               </details>
             ))
           : null}
-        {id === "shared" ? (
+        {id === "faq" ? (
           <details className="editor-section" open>
             <summary>
               <span>Frequently asked questions</span>

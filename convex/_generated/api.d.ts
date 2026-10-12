@@ -13,7 +13,6 @@ import type * as auth from "../auth.js";
 import type * as content from "../content.js";
 import type * as devLogins from "../devLogins.js";
 import type * as http from "../http.js";
-import type * as integrationChecks from "../integrationChecks.js";
 import type * as lib_access from "../lib/access.js";
 import type * as media from "../media.js";
 import type * as setup from "../setup.js";
@@ -32,7 +31,6 @@ declare const fullApi: ApiFromModules<{
   content: typeof content;
   devLogins: typeof devLogins;
   http: typeof http;
-  integrationChecks: typeof integrationChecks;
   "lib/access": typeof lib_access;
   media: typeof media;
   setup: typeof setup;

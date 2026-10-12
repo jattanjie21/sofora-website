@@ -1,4 +1,5 @@
 import type { WebsiteContent } from "../../../web/src/data/WebsiteContent";
+import type { PageId } from "../../../web/src/data/copy";
 
 export type Role = "admin" | "editor" | "officer";
 export const roleLabels: Record<Role, string> = {
@@ -15,16 +16,7 @@ export type StaffUser = {
   loginEmail: string;
   activated: boolean;
 };
-export type DocumentId =
-  | "home"
-  | "about"
-  | "savings"
-  | "loans"
-  | "membership"
-  | "community"
-  | "contact"
-  | "shared"
-  | "calculator";
+export type DocumentId = PageId;
 export type Activity = {
   id: string;
   scope: "content" | "applications" | "staff";

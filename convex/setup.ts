@@ -17,3 +17,14 @@ export const initialize=internalMutation({args:{administratorEmail:v.string(),in
   await ctx.db.insert("counts",{key:"applications",value:{total:0,membership:0,loan:0,new:0,in_review:0,needs_information:0,recommended:0,approved:0,rejected:0}});
   return null;
 }});
+
+// Replaces every website page with the default content, e.g. after the page structure changes.
+// Internal only: run with `pnpm exec convex run setup:resetPages`.
+export const resetPages=internalMutation({args:{},returns:v.number(),handler:async ctx=>{
+  const admin=await ctx.db.query("staff").first();
+  if(!admin) throw new ConvexError("Initialize the workspace first.");
+  for(const page of await ctx.db.query("pages").take(100)) await ctx.db.delete(page._id);
+  const at=new Date().toISOString();
+  for(const doc of documents) await ctx.db.insert("pages",{key:doc.id,published:slice(defaultWebsiteContent,doc.id),revision:1,updatedAt:at,updatedBy:admin._id});
+  return documents.length;
+}});

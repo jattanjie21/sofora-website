@@ -1,35 +1,62 @@
 # Content and asset sources
 
-Reviewed on 11 October 2026. The public WordPress website was used as a source during implementation only; the React app does not fetch it at runtime.
+The public website copies the old WordPress site at https://soforaccu.com/ as it was on 11 October 2026. Text was taken from the WordPress REST API (`/wp-json/wp/v2/pages`, `/posts`) and the rendered pages; images from `https://soforaccu.com/wp-content/uploads/`. The React app never fetches the old site at runtime.
 
-## Content
+## Pages
 
-- [Homepage](https://soforaccu.com/): identity, product categories, NACCUG affiliation, contact details, and cooperative registration year.
-- [About](https://soforaccu.com/about-us/): member ownership, mission, vision, and values.
-- [History](https://soforaccu.com/history/): the 2006 study group, 60 original members, the meaning of Sofora, and registration on 8 September 2011.
-- [Savings](https://soforaccu.com/saving/): personal, group/corporate/business, and children’s savings; the November 2013 savings-box programme and its supporting organisations.
-- [Loan services](https://soforaccu.com/loan-services/): the eight loan categories. Descriptions were rewritten for clarity.
-- [FAQ](https://soforaccu.com/faq/): membership contact options and reducing-balance loan context.
-- [Contact](https://soforaccu.com/contact-us/): five telephone numbers, the email address, and Bundung Six Junction address.
-- [Board](https://soforaccu.com/board-of-directors/) and [staff](https://soforaccu.com/staff/): names and roles reproduced from the public directories.
+Wording is copied word for word, including the original spelling and grammar, so the owner can correct it in the portal.
 
-## Information requiring owner confirmation
+| Old page | New route | Notes |
+| --- | --- | --- |
+| Home | `/` | Slider, rates, about, loan cards, calculators, latest news, help banner. |
+| About, History, FAQ | `/about-us/`, `/history/`, `/faq/` | FAQ questions came from the accordion titles in the page source. |
+| Board of Directors, Staff, Loan Team | `/board-of-directors/`, `/staff/`, `/loan-team/` | Loan Team showed the same people as Staff. |
+| Loan Services, Saving | `/loan-services/`, `/saving/` | |
+| Downloads | `/downloads/` | The four fillable PDFs are in `apps/web/public/downloads/`. |
+| Blog and its two posts | `/blog/`, `/exciting-news-for-sofora-cooperative-credit-union-members/`, `/the-evolution-of-sofora/` | |
+| Photo Gallery | `/photo-gallery/` | The old gallery plugin was broken and showed nothing; photos were taken from the media library. |
+| YouTube Gallery | `/youtube-gallery/` | Embeds channel `UC7ZTCxd3vVibor0d3qIGGcg` (the old Elfsight widget's channel). |
+| Contact us | `/contact-us/` | The form opens the visitor's email app; there is no mail server. |
+| Registration, Membership, Kafo and Loan application forms | Same slugs | Replaced by online forms that feed the portal's Applications queue. The old forms also collected ID numbers, photos and signatures; the online forms deliberately don't. |
 
-- The homepage advertises different annual rates for different products, while the FAQ states a single 15% rate. Product cards deliberately make no rate claims. The calculator uses an explicitly illustrative, editable rate.
-- Historic membership, savings, lending totals, and branch counts are not presented as current statistics.
-- Board/staff listings and contact details are copied from the existing public pages and need owner confirmation before launch.
-- The existing site’s approval-time promises, loan-to-savings multiples, six-month membership requirement, and no-extra-fees claim have not been carried over as current promises.
-- Opening hours are not available in the reviewed contact information. The contact page asks visitors to call ahead.
-- Online forms, member login, newsletters, and their data flows are not migrated in this public-site phase.
+## Needs owner confirmation before launch
 
-## Assets
+- The home page shows different rates per product (9%, 13%, 10%, 8%) while the FAQ says all loans are 15%.
+- Membership, savings and lending figures, board and staff lists, and contact details are as published on the old site and may be out of date.
+- Partner links for MRCCCU and Medical & Health CCU were empty on the old site.
 
-| Local asset | Original source |
+## Images (`apps/web/public/images/`)
+
+Large JPEGs were resized to at most 1920px wide and recompressed. The loan card icons are not copied: the originals came from an icon font licensed with the WordPress theme, so they were redrawn in `apps/web/src/components/Icon.tsx`. Poppins (`apps/web/public/fonts/`) is from Google Fonts under the SIL Open Font License.
+
+| Local file | Source under `wp-content/uploads/` |
 | --- | --- |
-| `apps/web/public/images/sofora-logo.png` | https://soforaccu.com/wp-content/uploads/2021/04/sofora_logo.png |
-| `apps/web/public/images/sofora-community.jpg` | https://soforaccu.com/wp-content/uploads/2021/08/83454872_2600330603410312_4158172935514750976_n.jpg |
-| `apps/web/public/images/savings-boxes.jpeg` | https://soforaccu.com/wp-content/uploads/2021/10/savings-boxes.jpeg |
-
-The photographs are existing Sofora archive images, not representations of newly documented events. Confirm Sofora’s reuse permissions before public launch.
-
-Manrope and DM Sans Latin variable fonts are self-hosted from Google Fonts. Their SIL Open Font License files are included next to the font files in `apps/web/public/fonts`. The logo is retained; the SOFORA text beside it is styled text for the new website. Decorative icons are inline SVG paths authored in `apps/web/src/components/Icon.tsx`.
+| `logo.png` | `2021/04/sofora_logo.png` |
+| `logo-white.png` | `2021/04/sofora_logo_web_white.png` |
+| `sofora-logo.png` | `2021/04/sofora_logo.png` (portal favicon and login) |
+| `sofora-community.jpg` | `2021/08/83454872_2600330603410312_4158172935514750976_n.jpg` |
+| `savings-boxes.jpeg` | `2021/10/savings-boxes.jpeg` |
+| `slide-online-members.jpg` | `2023/08/home-slider-online-members.jpg` |
+| `slide-personal-loan.jpg` | `2021/08/home-slider-a.jpg` |
+| `slide-car-loan.jpg` | `2021/08/home-slider-car-loan.jpg` |
+| `slide-careers.jpg` | `2021/08/home-slider-dd.jpg` |
+| `slide-education.jpg` | `2021/08/business-slider-bb.jpg` |
+| `slide-consumer.jpg` | `2021/08/business-slider-a.jpg` |
+| `slide-business.jpg` | `2021/08/business-slider-c.jpg` |
+| `business-loan.jpg` | `2021/08/business-loan.jpg` |
+| `page-header-about.jpg` | `2021/08/page-header-about.jpg` |
+| `rate-building.svg` | `2017/01/mortgage.svg` |
+| `rate-personal.svg` | `2017/01/loan.svg` |
+| `rate-agriculture.svg` | `2026/04/agric-1.svg` |
+| `rate-education.svg` | `2020/05/forex-icon-3.svg` |
+| `board-*.jpg` | `2016/12/` (board photos; board-vice-chairperson.jpg is Mrs-Fatou-Kolley-Gaye.jpg, as on the old site) |
+| `staff-*.jpg` | `2021/08/` (staff photos; Assan Jarju uses the placeholder board-modou-lamin-badjie.jpg, as on the old site) |
+| `partner-*.png` | `2021/08/` (NACCUG, SBFIC, GTUCCU, GPFCCU, MRCCU, Medical and Health CCU logos) |
+| `news-online-enquiry.jpg` | `2023/08/365712023_315795500839530_6554462997479411171_n.jpg` |
+| `news-evolution.jpg` | `2015/08/evolution-of-sofora.jpg` |
+| `evolution-1.jpg` | `2015/08/64436624_2181949051915138_4038279421663117312_n.jpg` |
+| `evolution-safiatou-ndey.jpg` | `2015/08/Safiatou-and-Ndey.jpg` |
+| `evolution-2.jpg` | `2015/08/45551152_1814687085308005_2739402700566298624_n.jpg` |
+| `savings-graph.jpeg` | `2021/10/graph.jpeg` |
+| `gallery-3.jpg` | `2021/04/49778651_1914485865328126_2156158983721713664_n.jpg` |
+| `gallery-4.jpeg` | `2026/04/WhatsApp-Image-2026-04-28-at-11.16.40.jpeg` |

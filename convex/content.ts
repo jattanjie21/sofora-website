@@ -11,7 +11,7 @@ import type { DocumentId } from "../apps/portal/src/data/types";
 
 export function slice(content:WebsiteContent,key:DocumentId) {
   return JSON.stringify({copy:Object.fromEntries(copyFields.filter(f=>f.page===key).map(f=>[f.key,content.copy[f.key]])),
-    ...(key==="about"?{board:content.board,staff:content.staff}:key==="savings"?{savings:content.savings}:key==="loans"?{loans:content.loans}:key==="contact"?{contact:content.contact}:key==="shared"?{faqs:content.faqs}:{})});
+    ...(key==="board"?{board:content.board}:key==="staff"?{staff:content.staff}:key==="loans"?{loans:content.loans}:key==="contact"?{contact:content.contact}:key==="faq"?{faqs:content.faqs}:{})});
 }
 export function merge(content:WebsiteContent,payload:string,key:DocumentId) {
   const data=JSON.parse(payload);
@@ -23,19 +23,22 @@ async function validate(ctx:QueryCtx,payload:string,key:DocumentId) {
   try {
     const data=JSON.parse(payload);
     content=applyDocument(structuredClone(defaultWebsiteContent),data,key);
+    const images:string[]=[];
     for(const f of copyFields.filter(f=>f.page===key)) {
       const value=content.copy[f.key];
       if(typeof value!=="string"||value.length>12000) throw new Error();
-      if(f.kind==="image"&&value.startsWith("storage:")) {
-        const storageId=ctx.db.system.normalizeId("_storage",value.slice(8));
-        const asset=storageId?await ctx.db.query("media").withIndex("by_storageId",q=>q.eq("storageId",storageId)).unique():null;
-        if(!asset) throw new Error();
-      }
+      if(f.kind==="image") images.push(value);
     }
-    for(const group of [content.board,content.staff]) if(!Array.isArray(group)||group.length>100||group.some(row=>!Array.isArray(row)||row.length!==2||row.some(s=>typeof s!=="string"||s.length>200))) throw new Error();
-    for(const k of ["loans","savings"] as const) {
-      if(!Array.isArray(content[k])||content[k].length!==defaultWebsiteContent[k].length||content[k].some((p,i)=>p.id!==defaultWebsiteContent[k][i]!.id||p.icon!==defaultWebsiteContent[k][i]!.icon||typeof p.title!=="string"||p.title.length>200||typeof p.description!=="string"||p.description.length>12000)) throw new Error();
+    for(const group of [content.board,content.staff]) {
+      if(!Array.isArray(group)||group.length>100||group.some(row=>!Array.isArray(row)||row.length!==3||row.some(s=>typeof s!=="string"||s.length>200))) throw new Error();
+      images.push(...group.map(row=>row[2]));
     }
+    for(const value of images) if(value.startsWith("storage:")) {
+      const storageId=ctx.db.system.normalizeId("_storage",value.slice(8));
+      const asset=storageId?await ctx.db.query("media").withIndex("by_storageId",q=>q.eq("storageId",storageId)).unique():null;
+      if(!asset) throw new Error();
+    }
+    if(!Array.isArray(content.loans)||content.loans.length!==defaultWebsiteContent.loans.length||content.loans.some((p,i)=>p.id!==defaultWebsiteContent.loans[i]!.id||typeof p.title!=="string"||p.title.length>200||typeof p.description!=="string"||p.description.length>12000)) throw new Error();
     if(!Array.isArray(content.faqs)||content.faqs.length>100||content.faqs.some(f=>typeof f.question!=="string"||typeof f.answer!=="string"||f.question.length>1000||f.answer.length>12000)) throw new Error();
     if(typeof content.contact.email!=="string"||typeof content.contact.address!=="string"||content.contact.address.length>2000||!Array.isArray(content.contact.phones)||content.contact.phones.length>20) throw new Error();
   } catch {throw new ConvexError("The page contains invalid content.");}
@@ -45,11 +48,11 @@ async function validate(ctx:QueryCtx,payload:string,key:DocumentId) {
 }
 export async function publishedContent(ctx:QueryCtx) {
   let content=structuredClone(defaultWebsiteContent);
-  for(const page of await ctx.db.query("pages").take(10)) content=merge(content,page.published,page.key as DocumentId);
+  for(const page of await ctx.db.query("pages").take(50)) content=merge(content,page.published,page.key as DocumentId);
   return content;
 }
 async function imageUrls(ctx:QueryCtx,contents:WebsiteContent[]) {
-  const ids=[...new Set(contents.flatMap(content=>Object.values(content.copy).filter(value=>value.startsWith("storage:")).map(value=>value.slice(8))))];
+  const ids=[...new Set(contents.flatMap(content=>[...Object.values(content.copy),...content.board.map(p=>p[2]),...content.staff.map(p=>p[2])].filter(value=>value.startsWith("storage:")).map(value=>value.slice(8))))];
   return Object.fromEntries(await Promise.all(ids.map(async id=>[`storage:${id}`,await ctx.storage.getUrl(id as Id<"_storage">)])));
 }
 export const published=query({args:{},returns:v.object({content:v.string(),images:v.record(v.string(),v.union(v.string(),v.null()))}),handler:async ctx=>{
@@ -58,7 +61,7 @@ export const published=query({args:{},returns:v.object({content:v.string(),image
 }});
 export const workspace=staffQuery({args:{},returns:v.array(v.object({id:documentKey,revision:v.number(),updatedAt:v.string(),updatedBy:v.string(),history:v.array(activity)})),handler:async ctx=>{
   requirePermission(ctx.person,"content:view");
-  return await Promise.all((await ctx.db.query("pages").take(10)).map(async page=>{
+  return await Promise.all((await ctx.db.query("pages").take(50)).map(async page=>{
     const history=await ctx.db.query("activity").withIndex("by_entity_and_note",q=>q.eq("entity",page.key).eq("note",false)).order("desc").take(20);
     return {id:page.key,revision:page.revision,updatedAt:page.updatedAt,updatedBy:page.updatedBy,history:history.map(activityDto)};
   }));

@@ -1,7 +1,8 @@
+import { pageIds } from "../apps/web/src/data/copy";
 import { v } from "convex/values";
 
 export const role = v.union(v.literal("admin"), v.literal("editor"), v.literal("officer"));
-export const documentKey = v.union(...["home", "about", "savings", "loans", "membership", "community", "contact", "shared", "calculator"].map(v.literal));
+export const documentKey = v.union(...pageIds.map(v.literal));
 export const status = v.union(v.literal("new"), v.literal("in_review"), v.literal("needs_information"), v.literal("recommended"), v.literal("approved"), v.literal("rejected"));
 export const kind = v.union(v.literal("membership"), v.literal("loan"));
 export const activity = v.object({id: v.string(), scope: v.union(v.literal("content"), v.literal("applications"), v.literal("staff")), at: v.string(), actorId: v.string(), message: v.string()});

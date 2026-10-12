@@ -1,168 +1,215 @@
-import { useWebsite } from "../data/WebsiteContent";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
+import { useWebsite } from "../data/WebsiteContent";
 import { Icon } from "./Icon";
+import { SmartLink } from "./ui";
+import { SearchForm } from "../pages/Search";
 
-function Brand({ footer = false }: { footer?: boolean }) {
+type MenuItem = { label: string; to?: string; children?: MenuItem[] };
+
+function useMenu(): MenuItem[] {
   const { copy: c } = useWebsite();
-  return (
-    <Link
-      to="/"
-      className={`brand ${footer ? "brand-footer" : ""}`}
-      aria-label={c["shared.sofora-cooperative-credit-union-home"]}
-    >
-      <img
-        src={c["shared.imagessoforalogopng"]}
-        alt={c["shared.image"]}
-        width="65"
-        height="64"
-      />
-      <span>
-        <strong>
-          {c["shared.sofora"]}
-          <span className="brand-period">.</span>
-        </strong>
-        <small>{c["shared.cooperative-credit-union"]}</small>
-      </span>
-    </Link>
-  );
+  const partner = (name: string, url?: string) => ({ label: name, to: url });
+  return [
+    { label: c["shared.nav-home"], to: "/" },
+    {
+      label: c["shared.nav-about-us"],
+      children: [
+        { label: c["shared.nav-about"], to: "/about-us/" },
+        { label: c["shared.nav-history"], to: "/history/" },
+        { label: c["shared.nav-faq"], to: "/faq/" },
+      ],
+    },
+    {
+      label: c["shared.nav-team"],
+      children: [
+        { label: c["shared.nav-board"], to: "/board-of-directors/" },
+        { label: c["shared.nav-staff"], to: "/staff/" },
+      ],
+    },
+    {
+      label: c["shared.nav-services"],
+      children: [
+        { label: c["shared.nav-loans"], to: "/loan-services/" },
+        { label: c["shared.nav-saving"], to: "/saving/" },
+        { label: c["shared.nav-downloads"], to: "/downloads/" },
+        { label: c["shared.nav-member-login"], to: c["shared.member-login-url"] },
+      ],
+    },
+    { label: c["shared.nav-blog"], to: "/blog/" },
+    {
+      label: c["shared.nav-partners"],
+      children: [
+        partner(c["shared.partner-1"], c["shared.partner-1-url"]),
+        partner(c["shared.partner-2"], c["shared.partner-2-url"]),
+        partner(c["shared.partner-3"], c["shared.partner-3-url"]),
+        partner(c["shared.partner-4"], c["shared.partner-4-url"]),
+        partner(c["shared.partner-5"]),
+        partner(c["shared.partner-6"]),
+        partner(c["shared.partner-7"], c["shared.partner-7-url"]),
+      ],
+    },
+    {
+      label: c["shared.nav-forms"],
+      children: [
+        { label: c["shared.nav-registration-form"], to: "/registration-form/" },
+        { label: c["shared.nav-membership-form"], to: "/membership-application-form/" },
+        { label: c["shared.nav-kafo-form"], to: "/kafo-application-form/" },
+        { label: c["shared.nav-loan-form"], to: "/loan-application-form/" },
+      ],
+    },
+    {
+      label: c["shared.nav-gallery"],
+      children: [
+        { label: c["shared.nav-photos"], to: "/photo-gallery/" },
+        { label: c["shared.nav-videos"], to: "/youtube-gallery/" },
+      ],
+    },
+    { label: c["shared.nav-contact"], to: "/contact-us/" },
+  ];
 }
 
-function Header() {
-  const { copy: c, contact } = useWebsite();
-  const navigation = [
-    ["/", c["shared.home"]],
-    ["/about", c["shared.about-us"]],
-    ["/savings", c["shared.savings"]],
-    ["/loans", c["shared.loans"]],
-    ["/community", c["shared.community"]],
-  ] as const;
+const samePage = (a: string, b: string) =>
+  a.replace(/\/+$/, "") === b.replace(/\/+$/, "");
 
+function Header() {
+  const { copy: c } = useWebsite();
+  const menu = useMenu();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
+  const searchToggle = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    setOpen(false);
+    setExpanded(null);
+  }, [pathname]);
 
   return (
     <>
-      <div className="utility-bar">
-        <div className="container utility-content">
-          <span>{c["shared.people-helping-people-since-2011"]}</span>
-          <a href={`tel:${contact.phones[0]?.replace(/\s/g, "") ?? ""}`}>
-            <Icon name="phone" />
-            {contact.phones[0]}
-            <span className="utility-contact">
-              {c["shared.lets-talk-2"]}
-              <Icon name="northeast" />
-            </span>
-          </a>
-        </div>
+      <div className="top-bar">
+        <div className="container">{c["shared.topbar"]}</div>
       </div>
       <header
         className="site-header"
         onKeyDown={(event) => {
-          if (event.key === "Escape" && open) {
+          if (event.key !== "Escape") return;
+          if (searching) {
+            setSearching(false);
+            searchToggle.current?.focus();
+          } else if (expanded) setExpanded(null);
+          else if (open) {
             setOpen(false);
             toggle.current?.focus();
           }
         }}
       >
-        <div className="container header-content">
-          <Brand />
+        <div className="container header-inner">
+          <Link to="/" className="logo" aria-label={c["shared.name"]}>
+            <img src={c["shared.logo"]} alt={c["shared.name"]} width="66" height="66" />
+          </Link>
           <button
             ref={toggle}
             className="menu-toggle"
             type="button"
-            aria-label={open ? "Close navigation" : "Open navigation"}
+            aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            aria-controls="main-navigation"
+            aria-controls="navigation"
             onClick={() => setOpen(!open)}
           >
             <Icon name={open ? "close" : "menu"} />
           </button>
           <nav
-            id="main-navigation"
-            className={`main-navigation ${open ? "is-open" : ""}`}
-            aria-label={c["shared.main-navigation"]}
-            onClick={(event) => {
-              if ((event.target as HTMLElement).closest("a")) setOpen(false);
-            }}
+            id="navigation"
+            className={`navigation${open ? " is-open" : ""}`}
+            aria-label="Main menu"
           >
-            <div className="nav-links">
-              {navigation.map(([to, label]) => (
-                <NavLink key={to} to={to} end={to === "/"}>
-                  {label}
-                </NavLink>
-              ))}
-            </div>
-            <div className="nav-actions">
-              <NavLink to="/contact" className="nav-contact">
-                {c["shared.contact-us"]}
-              </NavLink>
-              <Link
-                to="/membership"
-                className="button button-primary button-small"
-              >
-                {c["shared.join-sofora"]}
-                <Icon name="northeast" />
-              </Link>
-            </div>
+            <ul>
+              {menu.map((item) => {
+                const active = item.children
+                  ? item.children.some((child) => child.to && samePage(child.to, pathname))
+                  : item.to !== undefined && samePage(item.to, pathname);
+                if (!item.children)
+                  return (
+                    <li key={item.label}>
+                      <NavLink to={item.to!} end className={active ? "active" : ""}>
+                        {item.label}
+                      </NavLink>
+                    </li>
+                  );
+                const isExpanded = expanded === item.label;
+                return (
+                  <li
+                    key={item.label}
+                    className={`has-sub${isExpanded ? " is-expanded" : ""}`}
+                    onMouseLeave={() => setExpanded(null)}
+                  >
+                    <button
+                      type="button"
+                      className={active ? "active" : ""}
+                      aria-expanded={isExpanded}
+                      onClick={() => setExpanded(isExpanded ? null : item.label)}
+                    >
+                      {item.label}
+                      <Icon name="chevronDown" />
+                    </button>
+                    <ul>
+                      {item.children.map((child) => (
+                        <li key={child.label}>
+                          {child.to ? (
+                            <SmartLink to={child.to}>{child.label}</SmartLink>
+                          ) : (
+                            <span>{child.label}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
+          <button
+            ref={searchToggle}
+            className="search-toggle"
+            type="button"
+            aria-label={c["shared.search-button"]}
+            aria-expanded={searching}
+            aria-controls="header-search-panel"
+            onClick={() => setSearching(!searching)}
+          >
+            <Icon name={searching ? "close" : "search"} />
+          </button>
         </div>
+        {searching ? (
+          <div className="header-search" id="header-search-panel">
+            <div className="container">
+              <SearchForm autoFocus onSearch={() => setSearching(false)} />
+            </div>
+          </div>
+        ) : null}
       </header>
     </>
   );
 }
 
 function Footer() {
-  const { copy: c, contact } = useWebsite();
+  const { copy: c } = useWebsite();
   return (
     <footer className="site-footer">
-      <div className="container">
-        <div className="footer-main">
-          <div className="footer-about">
-            <Brand footer />
-            <p>
-              {c["shared.small-steps-shared-dreams"]}
-              <br />
-              {c["shared.a-stronger-future-together"]}
-            </p>
-            <span className="location-label">
-              <Icon name="pin" />
-              {c["shared.rooted-in-the-gambia"]}
-            </span>
-          </div>
-          <div>
-            <h2>{c["shared.explore-sofora"]}</h2>
-            <Link to="/about">{c["shared.our-story"]}</Link>
-            <Link to="/about#our-people">{c["shared.our-people"]}</Link>
-            <Link to="/community">{c["shared.our-community"]}</Link>
-            <Link to="/membership">{c["shared.become-a-member-2"]}</Link>
-          </div>
-          <div>
-            <h2>{c["shared.for-your-future"]}</h2>
-            <Link to="/savings">{c["shared.savings-2"]}</Link>
-            <Link to="/loans">{c["shared.loans-2"]}</Link>
-            <Link to="/loans#calculator">{c["shared.loan-calculator"]}</Link>
-            <Link to="/membership#faq">{c["shared.common-questions"]}</Link>
-          </div>
-          <div className="footer-contact">
-            <h2>{c["shared.lets-talk-3"]}</h2>
-            <a href={`tel:${contact.phones[0]?.replace(/\s/g, "") ?? ""}`}>
-              {contact.phones[0]}
-            </a>
-            <a href={`mailto:${contact.email}`}>{contact.email}</a>
-            <p>{contact.address}</p>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>
-            © {new Date().getFullYear()}
-            {c["shared.sofora-cooperative-credit-union"]}
-          </span>
-          <span>{c["shared.memberowned-communityfocused"]}</span>
-          <a href="#top" aria-label={c["shared.back-to-top"]}>
-            {c["shared.back-to-top-2"]}
-            <Icon name="arrow" />
-          </a>
+      <div className="container footer-main">
+        <Link to="/" aria-label={c["shared.name"]}>
+          <img src={c["shared.footer-logo"]} alt={c["shared.name"]} width="66" height="66" />
+        </Link>
+        <a className="footer-social" href={c["shared.twitter-url"]} target="_blank" rel="noreferrer">
+          <Icon name="twitter" />
+          {c["shared.twitter-label"]}
+        </a>
+      </div>
+      <div className="footer-bottom">
+        <div className="container">
+          Copyright {new Date().getFullYear()} | {c["shared.copyright"]}
         </div>
       </div>
     </footer>
@@ -171,77 +218,33 @@ function Footer() {
 
 export function Layout() {
   const { copy: c } = useWebsite();
-  const pageMetadata: Record<string, [string, string]> = {
-    "/": [
-      c["shared.growing-together"],
-      c["shared.people-helping-people-discover-savings-loans-and"],
-    ],
-    "/about": [
-      c["shared.about-us-2"],
-      c["shared.discover-the-story-values-and-people-behind"],
-    ],
-    "/savings": [
-      c["shared.savings-3"],
-      c["shared.explore-personal-group-business-and-childrens-savings"],
-    ],
-    "/loans": [
-      c["shared.loans-3"],
-      c["shared.explore-soforas-loan-options-and-use-our"],
-    ],
-    "/membership": [
-      c["shared.become-a-member-3"],
-      c["shared.find-out-how-to-join-sofora-cooperative"],
-    ],
-    "/community": [
-      c["shared.our-community-2"],
-      c["shared.discover-the-people-and-shared-saving-culture"],
-    ],
-    "/contact": [
-      c["shared.contact-us-2"],
-      c["shared.call-email-or-visit-sofora-cooperative-credit"],
-    ],
-  };
   const { pathname, hash } = useLocation();
   const previousPath = useRef(pathname);
-
-  const pagePath = pathname.replace(/\/+$/, "") || "/";
-  const [title, description] = pageMetadata[pagePath] ?? [
-    c["shared.page-not-found"],
-    c["shared.find-your-way-back-to-sofora-cooperative"],
-  ];
   useEffect(() => {
-    document.title = `Sofora Cooperative Credit Union — ${title}`;
     document
       .querySelector('meta[name="description"]')
-      ?.setAttribute("content", description);
-    document
-      .querySelector('meta[property="og:title"]')
-      ?.setAttribute("content", document.title);
-    document
-      .querySelector('meta[property="og:description"]')
-      ?.setAttribute("content", description);
+      ?.setAttribute("content", c["shared.description"]);
     const frame = requestAnimationFrame(() => {
       const target = hash ? document.getElementById(hash.slice(1)) : null;
       if (target) target.scrollIntoView();
       else window.scrollTo(0, 0);
-      if (previousPath.current !== pathname) {
+      if (previousPath.current !== pathname)
         document.getElementById("main-content")?.focus({ preventScroll: true });
-      }
       previousPath.current = pathname;
     });
     return () => cancelAnimationFrame(frame);
-  }, [pathname, hash, title, description]);
+  }, [pathname, hash, c]);
 
   return (
-    <div id="top">
+    <>
       <a href="#main-content" className="skip-link">
-        {c["shared.skip-to-content"]}
+        Skip to content
       </a>
       <Header />
       <main id="main-content" tabIndex={-1}>
         <Outlet />
       </main>
       <Footer />
-    </div>
+    </>
   );
 }

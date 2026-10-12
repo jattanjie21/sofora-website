@@ -1,10 +1,9 @@
-import { board, contact, faqs, loans, savings, staff } from "./content";
+import { board, contact, faqs, loans, staff } from "./content";
 import { defaultCopy } from "./copy";
 
 export const defaultWebsiteContent = {
   copy: defaultCopy,
   contact,
-  savings,
   loans,
   faqs,
   board,
@@ -12,4 +11,3 @@ export const defaultWebsiteContent = {
 };
 
 export type WebsiteContent = typeof defaultWebsiteContent;
-

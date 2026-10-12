@@ -1,27 +1,26 @@
-# Sofora staff portal
+# Portal and content architecture
 
-Approved in chat on 11 October 2026. This is a frontend mock for refining the portal before connecting Convex.
+How the public website, the staff portal and Convex fit together. Current as of 12 October 2026.
 
-## Scope
+## Decisions (and why)
 
-- A separate React, Vite, TypeScript app at `apps/portal`, using the existing workspace dependencies and port 5174.
-- Sofora blue, warm neutral backgrounds, local Manrope and DM Sans fonts. Responsive sidebar, overview, content editors, application queues, staff management.
-- Administrator, Content Editor, Content Publisher, Application Officer. Multiple roles per staff member. Demo user switching, without real authentication.
-- Structured editing of the existing seven public pages, shared copy, photos, products, FAQs, people and contact information. Existing layouts remain fixed.
-- Draft → In review → Published. Publishers and administrators can publish or return submissions with feedback. Editing is limited to drafts; returned content can be revised. The prior published content remains available until replacement is approved.
-- Portal-only draft/published previews reuse the existing website rendering. The public website keeps its original content and appearance.
-- Membership and loan application queues with search, filtering, manual entry, assignment, internal notes, missing-information status, officer recommendations and administrator decisions.
-- Add, edit and deactivate mock staff and assign preset roles. Protect the last active administrator.
-- Typed mock records in browser localStorage, with a confirmed reset action. No cross-user backend, Convex, real authentication, emails, payments, public application forms or deployment.
+- **Save means live.** There is no draft, review or publish step. The owner found the editorial workflow too complicated, so editors change a field, press Save, and the website updates. `revision` numbers prevent two people overwriting each other.
+- **The website is a copy of the old WordPress site.** Same menu, wording, photos and URLs, so members recognise it and old links keep working. Only the technology changed.
+- **Three roles:** Administrator (everything), Content Editor (edit content), Application Officer (work applications; only administrators make final decisions). There is no separate publisher role.
+- **Fixed page layouts.** Staff edit fields within each page; there is no page builder.
 
-## Implementation
+## How content flows
 
-Use the existing public page components with a content context whose default is the original website content. The portal supplies draft or mock published content to those same components in an isolated preview document. This creates two real consumers without introducing a speculative shared package or backend adapter.
+1. `apps/web/src/data/copy.ts` lists every editable field (page, section, label, key, default, kind) and `content.ts` holds the lists (loans, FAQs, board, staff, contact). Together they are the default content.
+2. Convex stores one `pages` row per page id, holding that page's fields as JSON. `setup:initialize` seeds the rows from the defaults; `setup:resetPages` replaces them.
+3. `content.published` merges the stored rows over the defaults. The public site loads it in `LiveWebsite.tsx` and re-renders when it changes. Fields missing from a stored row fall back to the default, so adding a field needs no migration.
+4. The portal's Website content screen lists the pages in `documents` (`apps/portal/src/data/content.ts`). Its editor is generated from the `copy.ts` rows, with extra editors for lists and photos in `ContentFields.tsx`.
+5. The Preview tab renders the real public components in an iframe at `/preview/...` in the portal, fed by `postMessage`. `pnpm screenshot` reuses this route.
 
-Keep domain records and mock actions in the portal. Components use explicit actions for editorial transitions, application processing and staff management. Permissions are checked in both the UI and mock actions. These are demo controls, not a security boundary; backend authorization will be required when Convex is connected.
+## Applications
 
-Reuse React, React Router, Vite and TypeScript at the existing versions. No new UI library or test infrastructure.
+The four public forms (`apps/web/src/pages/Apply.tsx`) call `applications.submit`. Applications appear in the portal's queue, where officers assign, add notes, request information and recommend, and administrators approve or reject. Staff can also enter applications by hand.
 
-## Validation
+## Accounts
 
-Run `pnpm typecheck` and `pnpm build`. No tests, Docker or browser automation. Provide a manual review guide covering all screens, role restrictions, editorial transitions, application decisions, persistence, preview isolation, keyboard use and responsive layouts. Compilation does not establish browser correctness.
+Staff accounts are invitation-only (an administrator creates a single-use activation link). For development, `admin` / `admin` is available where `DEV_LOGINS=true`.
