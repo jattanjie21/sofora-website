@@ -43,7 +43,7 @@ pnpm typecheck         # Strict TypeScript across the backend and both apps
 pnpm build             # Typecheck, then build through Turborepo
 pnpm preview           # Serve the website's production build
 pnpm --filter @sofora/portal preview   # Serve the portal build on port 4174
-pnpm screenshot /loan-services/ out.png   # Full-page screenshot of a public page (needs npm start)
+pnpm screenshot /services/ out.png        # Full-page screenshot of a public page (needs npm start)
 ```
 
 The production outputs are `apps/web/dist` and `apps/portal/dist`. Both apps need `VITE_CONVEX_URL` set at build time.
@@ -85,13 +85,13 @@ The website reproduces the original WordPress site at soforaccu.com (Borrow them
 
 | Menu                 | Routes                                                                                                   |
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
-| Home                 | `/`: slider, loan rates, about, loan services, loan and amortization calculators, latest news            |
+| Home                 | `/`: slider, loan rates, about, loan services, loan calculator, latest news            |
 | About Us             | `/about-us/`, `/history/`, `/faq/`                                                                       |
 | Team                 | `/board-of-directors/`, `/staff/` (also `/loan-team/`, linked from the home page)                        |
-| Services             | `/loan-services/`, `/saving/`, `/downloads/` (fillable PDFs in `apps/web/public/downloads`), Member Login (external) |
+| Services             | `/services/` hub (loans, savings, how it works, calculator, forms), one page per product such as `/services/car-loan/`, `/downloads/` (fillable PDFs in `apps/web/public/downloads`). `/loan-services/` and `/saving/` redirect to the hub. Member Login (external) is in the top bar |
 | Blog                 | `/blog/`, `/exciting-news-for-sofora-cooperative-credit-union-members/`, `/the-evolution-of-sofora/`     |
 | Partners             | External links to partner credit unions                                                                  |
-| Forms                | `/registration-form/`, `/membership-application-form/`, `/kafo-application-form/`, `/loan-application-form/` |
+| Forms & Downloads    | `/downloads/`, `/registration-form/`, `/membership-application-form/`, `/kafo-application-form/`, `/loan-application-form/` |
 | Gallery              | `/photo-gallery/`, `/youtube-gallery/`                                                                   |
 | Contact Us           | `/contact-us/`                                                                                           |
 
@@ -108,9 +108,9 @@ Differences from the old site:
 - The YouTube Gallery embeds the channel's uploads instead of the Elfsight widget.
 - Search (the round button in the header) works like the old one, with results at `/?s=…`. It searches the live content in the browser, so portal edits are searchable straight away.
 - The footer newsletter signup and embedded Twitter feed are left out. The footer and home page link to Twitter instead.
-- The amortization calculator shows a repayment schedule on the page instead of emailing a PDF.
+- The loan and amortization calculators are merged into one loan calculator, which shows the month-by-month repayment schedule on the page instead of emailing a PDF.
 
-All text and images are defined in `apps/web/src/data/copy.ts` (one row per field, grouped by page; the portal builds its editor from this list) and the lists in `apps/web/src/data/content.ts` (loans, FAQs, board, staff, contact details, and the image library offered in the portal's photo pickers). These seed the Convex `pages` table when the workspace is initialised. After that, content is edited in the portal. If the page structure changes, `pnpm exec convex run setup:resetPages` replaces all stored pages with the defaults. Page layouts are in `apps/web/src/pages`, and colours are at the beginning of `apps/web/src/styles.css`.
+All text and images are defined in `apps/web/src/data/copy.ts` (one row per field, grouped by page; the portal builds its editor from this list) and the lists in `apps/web/src/data/content.ts` (loans, FAQs, board, staff, contact details, and the image library offered in the portal's photo pickers). These seed the Convex `pages` table when the workspace is initialised. After that, content is edited in the portal. After adding a page, `pnpm exec convex run setup:addMissingPages` creates its row with the defaults and leaves the other pages alone. If the page structure changes more deeply, `pnpm exec convex run setup:resetPages` replaces all stored pages with the defaults. Page layouts are in `apps/web/src/pages`, and colours are at the beginning of `apps/web/src/styles.css`.
 
 The wording is copied from the old site as it was on 11 October 2026, including its spelling and grammar, so it can be corrected in the portal. See [content sources](docs/content-sources.md).
 
@@ -170,7 +170,7 @@ r = annual percentage rate / 1200
 payment = principal × r / (1 − (1 + r)^(−months))
 ```
 
-At 0% interest, the payment is the principal divided by the number of months. A numerically stable `log1p`/`expm1` expression avoids cancellation at very small positive rates. The loan calculator matches the old one: sliders for amount, months and rate, and Monthly EMI, Total Interest, Payable Amount and Interest Percentage (interest as a share of the payable amount). Its starting rate (15%) is editable in the portal. The amortization calculator lists every monthly payment.
+At 0% interest, the payment is the principal divided by the number of months. A numerically stable `log1p`/`expm1` expression avoids cancellation at very small positive rates. The loan calculator (`apps/web/src/components/LoanCalculator.tsx`, on the home and services pages) has a slider and a number box for amount, months and rate, shows the monthly repayment, amount borrowed, total interest and total to repay, and can show the month-by-month schedule. Its starting rate (15%) is editable in the portal.
 
 ## Manual review
 
@@ -180,8 +180,8 @@ There is no automated test framework. Type checking and production builds don’
 2. Check widths of about 360px, 768px and 1440px. Content should stay readable with no horizontal overflow.
 3. On mobile, open the menu, expand a section and follow a link. Press Escape to close it; focus should return to the menu button.
 4. Use only the keyboard: follow the skip link, open the dropdown menus, move through links and inputs, and expand FAQs. Focus should stay visible.
-5. On the home page calculator, the defaults (GMD 1,000, 1 month, 15%) should show a Monthly EMI of GMD1,012.50 and 1.23% interest, as on the old site. In the amortization calculator, GMD 12,000 at 12% for 12 months should show GMD1,066.19 a month.
-6. On the Downloads page, each Download button should save the matching PDF.
+5. In the loan calculator, the defaults (GMD 50,000, 12 months, 15%) should show GMD4,512.92 a month. Typing GMD 12,000 at 12% for 12 months should show GMD1,066.19 a month and a 12-row schedule.
+6. On the Downloads page, each Download button should save the matching PDF. On the application forms, the tabs in the header switch between the four forms.
 7. Submit each of the four forms. Expect a reference number, then find both in the portal’s Applications queue.
 8. In the portal, edit a page and press **Save**. The public website should update without a refresh.
 9. Enable reduced motion in your operating system and confirm that the slider no longer advances by itself and smooth scrolling is off.
@@ -194,7 +194,7 @@ The live website has not been deployed or changed.
 
 - Deploy the Convex backend to a production deployment (`npx convex deploy`), configure Convex Auth there, and run `setup:initialize` once.
 - Build both apps with `VITE_CONVEX_URL` pointing at the production deployment.
-- Configure your static host to serve `apps/web/dist` and `apps/portal/dist` and rewrite application routes to `index.html` while preserving real asset paths. Without the rewrite, refreshing a route such as `/loan-services/` fails.
+- Configure your static host to serve `apps/web/dist` and `apps/portal/dist` and rewrite application routes to `index.html` while preserving real asset paths. Without the rewrite, refreshing a route such as `/services/` fails.
 - The routes match the old WordPress addresses, so no redirects are needed when the domain moves. Old addresses that no longer exist (`/blog/` pagination, `/author/…`, `/downloads/` file links with `?wpdmdl=`) show the not-found page.
 - Before publishing, confirm the organisation’s current product terms, staff, contact details, permission to use the images, and any legal notices.
 - This is a client-rendered Vite application. Social previews use the homepage metadata; page-specific metadata is applied in the browser. Page-specific social previews and indexing would need static prerendering or server rendering.

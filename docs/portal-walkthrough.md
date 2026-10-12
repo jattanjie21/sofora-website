@@ -5,10 +5,10 @@ A quick end-to-end check of the website and portal in a real browser. There are 
 ## Website
 
 1. Open every menu item, including each dropdown. Pages should match the old soforaccu.com.
-2. Home: the slider advances on its own and with the arrows; the loan calculator defaults (GMD 1,000, 1 month, 15%) show a Monthly EMI of GMD1,012.50 and 1.23%.
-3. Amortization calculator: GMD 12,000 at 12% for 12 months shows GMD1,066.19 a month and a 12-row schedule.
-4. Search (round button in the header): "guarantor" finds FAQ and Loan Services; nonsense shows the "nothing matched" message.
-5. Downloads: each button saves the matching PDF.
+2. Home: the slider advances on its own and with the arrows; the loan calculator defaults (GMD 50,000, 12 months, 15%) show GMD4,512.92 a month.
+3. Loan calculator: GMD 12,000 at 12% for 12 months shows GMD1,066.19 a month, and the schedule button lists 12 rows.
+4. Search (round button in the header): "guarantor" finds FAQ and the loan product pages; nonsense shows the "nothing matched" message.
+5. Downloads: each Download button saves the matching PDF; "Apply online instead" opens the matching online form.
 6. Photo Gallery: clicking a photo opens it full screen; Escape closes it.
 7. Submit each of the four forms. You get a reference number.
 8. At phone width, the menu button opens collapsible sections, with no sideways scrolling.

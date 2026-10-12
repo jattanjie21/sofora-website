@@ -1,6 +1,7 @@
 import { useQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { api } from "../../../../convex/_generated/api";
+import { defaultCopy } from "./copy";
 import { WebsiteContentContext, type WebsiteContent } from "./WebsiteContent";
 
 // Swaps uploaded-photo references ("storage:…") for their web addresses.
@@ -9,11 +10,15 @@ export function resolveImages(content:WebsiteContent,images:Record<string,string
   const copy={...content.copy};
   for(const key of Object.keys(copy) as (keyof typeof copy)[]) copy[key]=resolve(copy[key]);
   const people=(list:WebsiteContent["board"])=>list.map(([name,role,photo])=>[name,role,resolve(photo)] as typeof list[number]);
-  return {...content,copy,board:people(content.board),staff:people(content.staff)};
+  return {...content,copy,board:people(content.board),staff:people(content.staff),partners:content.partners.map(p=>({...p,logo:resolve(p.logo)}))};
 }
 export function LiveWebsite({children}:{children:ReactNode}) {
   const result=useQuery(api.content.published);
   if(!result) return <main className="container section" role="status">Loading Sofora…</main>;
-  const content=resolveImages(JSON.parse(result.content),result.images);
+  const published = JSON.parse(result.content) as WebsiteContent;
+  const content = resolveImages(
+    { ...published, copy: { ...defaultCopy, ...published.copy } },
+    result.images,
+  );
   return <WebsiteContentContext.Provider value={content}>{children}</WebsiteContentContext.Provider>;
 }

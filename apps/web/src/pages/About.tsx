@@ -1,6 +1,7 @@
 import { useWebsite } from "../data/WebsiteContent";
 import { Icon, type IconName } from "../components/Icon";
-import { FaqList, PageHeader, PeopleGrid, lines } from "../components/ui";
+import { NavLink } from "react-router";
+import { CtaBanner, FaqList, HeroBanner, PageHeader, PeopleGrid, lines, usePageTitle } from "../components/ui";
 
 export function About() {
   const { copy: c } = useWebsite();
@@ -113,26 +114,62 @@ export function Faq() {
   );
 }
 
+// Hero tabs shared by the two team pages.
+function TeamTabs() {
+  const { copy: c } = useWebsite();
+  return (
+    <nav className="gallery-tabs" aria-label={c["shared.nav-team"]}>
+      <NavLink to="/board-of-directors/">
+        <Icon name="shield" />
+        {c["shared.nav-board"]}
+      </NavLink>
+      <NavLink to="/staff/">
+        <Icon name="people" />
+        {c["shared.nav-staff"]}
+      </NavLink>
+    </nav>
+  );
+}
+
 export function Board() {
   const { copy: c, board } = useWebsite();
+  usePageTitle(c["board.title"]);
   return (
     <>
-      <PageHeader title={c["board.title"]} />
-      <div className="container page-panel">
+      <HeroBanner title={c["board.title"]} intro={c["board.intro"]} image={c["board.hero-image"]}>
+        <TeamTabs />
+      </HeroBanner>
+      <div className="container team-body">
         <PeopleGrid people={board} />
       </div>
+      <CtaBanner
+        heading={c["board.cta-heading"]}
+        text={c["board.cta-text"]}
+        primary={[c["board.cta-button"], "/membership-application-form/"]}
+        secondary={[c["board.cta-about"], "/about-us/"]}
+      />
     </>
   );
 }
 
 export function Staff({ loanTeam = false }: { loanTeam?: boolean }) {
   const { copy: c, staff } = useWebsite();
+  const title = loanTeam ? c["staff.loan-team-title"] : c["staff.title"];
+  usePageTitle(title);
   return (
     <>
-      <PageHeader title={loanTeam ? c["staff.loan-team-title"] : c["staff.title"]} />
-      <div className="container page-panel">
+      <HeroBanner title={title} intro={c["staff.intro"]} image={c["staff.hero-image"]}>
+        <TeamTabs />
+      </HeroBanner>
+      <div className="container team-body">
         <PeopleGrid people={staff} />
       </div>
+      <CtaBanner
+        heading={c["staff.cta-heading"]}
+        text={c["staff.cta-text"]}
+        primary={[c["staff.cta-button"], "/contact-us/"]}
+        secondary={[c["staff.cta-member"], "/membership-application-form/"]}
+      />
     </>
   );
 }

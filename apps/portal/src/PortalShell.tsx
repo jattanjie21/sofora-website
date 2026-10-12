@@ -15,14 +15,14 @@ import { DirtyContext, Icon, Modal, useFeedback } from "./components/ui";
 const navigation: {
   to: string;
   label: string;
-  icon: "home" | "book" | "briefcase" | "people";
+  icon: "home" | "browser" | "briefcase" | "people";
   permission?: Permission;
 }[] = [
   { to: "/", label: "Overview", icon: "home" },
   {
     to: "/content",
     label: "Website content",
-    icon: "book",
+    icon: "browser",
     permission: "content:view",
   },
   {
@@ -44,6 +44,13 @@ export function PortalShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("sofora-sidebar") === "collapsed";
+    } catch {
+      return false;
+    }
+  });
   const [accountAction, setAccountAction] = useState<AccountAction | null>(
     null,
   );
@@ -90,6 +97,13 @@ export function PortalShell() {
     window.scrollTo(0, 0);
   }, [location.pathname, pageLabel]);
   useEffect(() => {
+    try {
+      localStorage.setItem("sofora-sidebar", collapsed ? "collapsed" : "open");
+    } catch {
+      // Private windows can block storage; the sidebar still works.
+    }
+  }, [collapsed]);
+  useEffect(() => {
     if (menuOpen)
       sidebar.current?.querySelector<HTMLAnchorElement>("nav a")?.focus();
   }, [menuOpen]);
@@ -109,7 +123,7 @@ export function PortalShell() {
       <a className="skip-link" href="#portal-main">
         Skip to content
       </a>
-      <div className="portal-shell">
+      <div className={`portal-shell${collapsed ? " is-collapsed" : ""}`}>
         <aside
           ref={sidebar}
           id="portal-navigation"
@@ -121,16 +135,21 @@ export function PortalShell() {
             }
           }}
         >
-          <Link className="portal-brand" to="/">
-            <img src="/images/sofora-logo.png" width="56" height="56" alt="" />
-            <span>
-              <strong>
-                SOFORA<span>.</span>
-              </strong>
-              <small>STAFF WORKSPACE</small>
-            </span>
-          </Link>
-          <p className="sidebar-label">Your workspace</p>
+          <div className="sidebar-head">
+            <Link className="portal-brand" to="/" aria-label="Sofora CCU home">
+              <img src="/images/logo-white.png" width="48" height="48" alt="" />
+              <strong>Sofora CCU</strong>
+            </Link>
+            <button
+              className="sidebar-toggle"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!collapsed}
+              aria-controls="portal-navigation"
+              onClick={() => setCollapsed(!collapsed)}
+            >
+              <Icon name={collapsed ? "chevronRight" : "chevronLeft"} />
+            </button>
+          </div>
           <nav aria-label="Staff portal">
             {navigation
               .filter((item) => !item.permission || can(user, item.permission))
@@ -153,8 +172,6 @@ export function PortalShell() {
             <small>A little care behind every member’s next chapter.</small>
           </div>
           <div className="sidebar-bottom">
-            <div className="demo-label"><span /> Connected workspace</div>
-            <p>Shared with your Sofora team.</p>
             <AccountMenu key={location.pathname + user.id} onAction={requestAccountAction} />
           </div>
         </aside>
@@ -169,23 +186,17 @@ export function PortalShell() {
           />
         ) : null}
         <div className="workspace">
-          <header className="topbar">
-            <div className="breadcrumb">
-              <button
-                ref={menuButton}
-                className="icon-button mobile-menu"
-                aria-label="Toggle navigation"
-                aria-expanded={menuOpen}
-                aria-controls="portal-navigation"
-                onClick={() => setMenuOpen(!menuOpen)}
-              >
-                <Icon name={menuOpen ? "close" : "menu"} />
-              </button>
-              <span>Workspace</span>
-              <span className="breadcrumb-slash">/</span>
-              <strong>{pageLabel}</strong>
-            </div>
-            <span className="subtle-tag">Staff workspace</span>
+          <header className="mobile-topbar">
+            <button
+              ref={menuButton}
+              className="icon-button mobile-menu"
+              aria-label="Toggle navigation"
+              aria-expanded={menuOpen}
+              aria-controls="portal-navigation"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <Icon name={menuOpen ? "close" : "menu"} />
+            </button>
           </header>
           <main id="portal-main" tabIndex={-1} className="main-content">
             {message}

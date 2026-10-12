@@ -1,9 +1,8 @@
 import { Link, useSearchParams } from "react-router";
 import { useWebsite } from "../data/WebsiteContent";
-import { AmortizationCalculator, LoanCalculator } from "../components/LoanCalculator";
+import { LoanCalculator } from "../components/LoanCalculator";
 import { Icon } from "../components/Icon";
-import { HelpBanner, LoanCards, SmartLink, Slider, usePageTitle } from "../components/ui";
-import { PostCards } from "./Blog";
+import { CtaBanner, HelpBanner, ProductGrid, SmartLink, Slider, usePageTitle } from "../components/ui";
 import { SearchResults } from "./Search";
 
 export function Home() {
@@ -12,7 +11,7 @@ export function Home() {
 }
 
 function HomePage() {
-  const { copy: c } = useWebsite();
+  const { copy: c, loans } = useWebsite();
   usePageTitle("");
   const slides = ([1, 2, 3, 4] as const).map((n) => ({
     image: c[`home.slide-${n}-image`],
@@ -41,7 +40,7 @@ function HomePage() {
       <h1 className="sr-only">{c["shared.name"]}</h1>
       <Slider slides={slides} />
       <section className="rates" aria-label="Loan rates">
-        <div className="container rates-grid">
+        <div className="rates-grid">
           {rates.map((rate) => (
             <div className="rate" key={rate.label}>
               <img src={rate.icon} alt="" width="60" height="60" />
@@ -93,44 +92,34 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section home-loans">
         <div className="container">
-          <div className="section-title">
-            <h2>{c["home.loans-heading"]}</h2>
-            <p>
-              {c["home.loans-text"]} <strong>{c["home.loans-highlight"]}</strong>
-            </p>
+          <div className="home-loans-head">
+            <div>
+              <h2>{c["home.loans-heading"]}</h2>
+              <p>
+                {c["home.loans-text"]} <strong>{c["home.loans-highlight"]}</strong>
+              </p>
+            </div>
+            <Link className="btn btn-outline home-loans-all" to="/services/">
+              {c["home.loans-all-button"]}
+              <Icon name="arrow" />
+            </Link>
           </div>
-          <LoanCards />
-          <Link className="btn btn-spaced" to="/loan-services/">
-            {c["home.loans-button"]}
-          </Link>
+          <ProductGrid products={loans.slice(0, 3)} />
         </div>
       </section>
 
-      <div className="section-flush">
-        <LoanCalculator />
-        <AmortizationCalculator />
-      </div>
-
-      <section className="section section-white">
-        <div className="container">
-          <h2 className="section-heading">{c["home.news-heading"]}</h2>
-          <PostCards />
-        </div>
-      </section>
+      <LoanCalculator />
 
       <HelpBanner />
 
-      <section className="social-section">
-        <div className="container">
-          <h2>{c["shared.social-heading"]}</h2>
-          <a className="btn" href={c["shared.twitter-url"]} target="_blank" rel="noreferrer">
-            <Icon name="twitter" />
-            {c["shared.twitter-label"]}
-          </a>
-        </div>
-      </section>
+      <CtaBanner
+        heading={c["home.cta-heading"]}
+        text={c["home.cta-text"]}
+        primary={[c["home.cta-button"], "/membership-application-form/"]}
+        secondary={[c["home.cta-contact"], "/contact-us/"]}
+      />
     </>
   );
 }

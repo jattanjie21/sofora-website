@@ -1,4 +1,4 @@
-import type { LoanId } from "../data/content";
+import type { ServiceId } from "../data/content";
 
 const paths = {
   arrow: "M4 12h16m-6-6 6 6-6 6",
@@ -12,6 +12,8 @@ const paths = {
   chevronRight: "m9 6 6 6-6 6",
   download: "M12 4v11m-5-5 5 5 5-5M4 20h16",
   play: "M8 5v14l11-7L8 5Z",
+  expand: "M4 9V4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5",
+  image: "M3 4h18v16H3V4Zm0 12 5-5 5 5 3-3 5 5M15 9a1 1 0 1 0 2 0 1 1 0 0 0-2 0Z",
   phone:
     "M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3.1 5.2 2 2 0 0 1 5.1 3h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 10.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 .8 1.1Z",
   mail: "M3 4h18v16H3V4Zm0 2 9 7 9-7",
@@ -28,6 +30,7 @@ const paths = {
   shield: "m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7l8-4Zm-4 9 3 3 5-6",
   sprout: "M12 21v-9M12 16C4 16 3 10 3 6c7 0 9 4 9 10Zm0-4c0-6 3-9 9-9 0 6-3 9-9 9Z",
   book: "m2 4 10 3 10-3v15l-10 3-10-3V4Zm10 3v15",
+  browser: "M4 5h16v14H4V5Zm0 4h16M7 7h.01M11 7h.01M15 7h.01",
   wallet: "M20 8H5a3 3 0 0 1 0-6h13v6M3 5v14a2 2 0 0 0 2 2h15V8m0 5h-5v4h5",
   briefcase: "M3 7h18v14H3V7Zm5 0V3h8v4M3 12l9 3 9-3m-9 1v4",
   twitter:
@@ -53,8 +56,8 @@ export function Icon({ name }: { name: IconName }) {
   );
 }
 
-// Line illustrations for the loan products, drawn on a 64×64 grid in the style of the original site.
-const loanPaths: Record<LoanId, string> = {
+// Line illustrations for the loan and savings products, drawn on a 64×64 grid in the style of the original site.
+const servicePaths: Record<ServiceId, string> = {
   business:
     "M6 34h8v22H6zM14 38h10c4 0 6 3 10 3h8a3 3 0 0 1 0 6H30m-16 5 14 3c4 1 6 0 9-2l17-11a3 3 0 0 0-3-5l-12 7M38 12a6 6 0 1 1-12 0 6 6 0 0 1 12 0Zm-3 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM50 6a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z",
   education:
@@ -70,9 +73,17 @@ const loanPaths: Record<LoanId, string> = {
     "M6 22h48a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4zM6 22l26-14 12 14M20 22l18-10m20 22H44a4 4 0 0 0 0 8h14M46 38h2M10 28h4m4 0h4m4 0h4m4 0h4",
   emergency:
     "M4 10h8l6 30h30l6-20H24M22 48a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm28 0a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM40 8a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 5v10m-5-5h10",
+  "personal-saving":
+    "M12 34c0-10 9-17 21-17s21 7 21 17c0 6-3 10-7 12v8h-7v-5H25v5h-7v-8c-4-2-6-6-6-12ZM12 34H6m48-6h4v8h-4M22 21l-3-8 9 5m-2 5h12M44 30h.01M33 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z",
+  "group-saving":
+    "M13 18a5 5 0 1 0 10 0 5 5 0 0 0-10 0Zm14-4a5 5 0 1 0 10 0 5 5 0 0 0-10 0Zm14 4a5 5 0 1 0 10 0 5 5 0 0 0-10 0ZM6 38c0-7 5-11 12-11 3 0 5 1 7 2m14 0c2-1 4-2 7-2 7 0 12 4 12 11M21 36c0-8 5-13 11-13s11 5 11 13M12 42h40v16H12zm20 4v8m-4-6h6a2 2 0 0 1 0 4h-4",
+  "childrens-saving":
+    "M18 16a6 6 0 1 0 12 0 6 6 0 0 0-12 0ZM12 46c0-9 5-16 12-16s12 7 12 16M18 46v10m12-10v10M46 28a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 4v12m4-9h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4h-6M6 58h52",
+  "saving-boxes":
+    "M10 26h44v32H10zm0 0 6-8h32l6 8M26 34h12M32 42a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 8v4M32 4v12m-5-5 5 5 5-5",
 };
 
-export function LoanIcon({ id }: { id: LoanId }) {
+export function ServiceIcon({ id }: { id: ServiceId }) {
   return (
     <svg
       className="loan-icon"
@@ -84,7 +95,7 @@ export function LoanIcon({ id }: { id: LoanId }) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d={loanPaths[id]} />
+      <path d={servicePaths[id]} />
     </svg>
   );
 }

@@ -48,7 +48,6 @@ export function Staff() {
   return (
     <>
       <PageHeader
-        eyebrow="The people behind the progress"
         title="Staff & roles"
         action={
           <button
@@ -59,38 +58,9 @@ export function Staff() {
             Add staff member
           </button>
         }
-      >
-        Give each teammate the access they need to do good work.
-      </PageHeader>
+      />
       {message}
       {activationLink ? <section className="notice notice-success"><label className="field"><span>Activation link — share privately with this staff member</span><input readOnly value={activationLink} onFocus={event=>event.target.select()} /></label><button className="text-button" onClick={()=>setActivationLink("")}>Dismiss</button></section> : null}
-      <div className="role-grid">
-        {roles.map((role) => (
-          <div className="role-card" key={role}>
-            <span className="row-symbol">
-              <Icon
-                name={
-                  role === "admin"
-                    ? "shield"
-                    : role === "officer"
-                      ? "briefcase"
-                      : "book"
-                }
-              />
-            </span>
-            <h2>{roleLabels[role]}</h2>
-            <p>{roleDescriptions[role]}</p>
-            <span className="subtle-tag">
-              {
-                state.users.filter(
-                  (person) => person.active && person.roles.includes(role),
-                ).length
-              }{" "}
-              active
-            </span>
-          </div>
-        ))}
-      </div>
       <section className="panel">
         <div className="panel-heading">
           <div>
@@ -181,7 +151,6 @@ export function Staff() {
           <span>Staff accounts · access managed by administrators</span>
         </div>
       </section>
-      <div className="demo-footnote"><Icon name="people" /><p>Add a staff member, then create an activation link for them to set their password. Links must be shared privately; no email is sent automatically.</p></div>
       {editing ? (
         <StaffEditor initial={editing} onClose={() => setEditing(null)} />
       ) : null}

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { copyFields } from "../../../web/src/data/copy";
 import { imageLibrary } from "../../../web/src/data/content";
 import type { WebsiteContent } from "../../../web/src/data/WebsiteContent";
+import { productFields } from "../data/content";
 import type { DocumentId } from "../data/types";
 import { Field, Icon } from "./ui";
 
@@ -12,10 +13,13 @@ function ImageField({
   label,
   value,
   onChange,
+  noneLabel,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  // When given, adds a choice for no image (stored as an empty value).
+  noneLabel?: string;
 }) {
   const [error, setError] = useState("");
   const uploadUrl = useMutation(api.media.uploadUrl);
@@ -47,13 +51,18 @@ function ImageField({
 
   return (
     <div className="image-field">
-      <img src={value.startsWith("storage:") ? resolved ?? "/images/sofora-logo.png" : value} alt="Current content image" />
+      {value ? (
+        <img src={value.startsWith("storage:") ? resolved ?? "/images/sofora-logo.png" : value} alt="Current content image" />
+      ) : (
+        <span className="image-field-empty">No image</span>
+      )}
       <div>
         <Field label={label}>
           <select
             value={value.startsWith("storage:") ? "custom" : value}
             onChange={(event) => onChange(event.target.value)}
           >
+            {noneLabel ? <option value="">{noneLabel}</option> : null}
             {imageLibrary.map((image) => (
               <option key={image.path} value={image.path}>
                 {image.title}
@@ -201,44 +210,53 @@ export function ContentFields({
             No matching copy fields. Try another search.
           </p>
         ) : null}
-        {id === "loans" ? (
-          <details className="editor-section" open>
-            <summary>
-              <span>Loan products</span>
-              <Icon name="plus" />
-            </summary>
-            <div className="editor-section-body">
-              {content.loans.map((product, index) => (
-                <div className="repeat-item" key={product.id}>
-                  <p className="kicker">
-                    Loan {index + 1}
+        {id === "loans" || id === "saving"
+          ? ([id === "loans" ? "loans" : "savings"] as const).map((list) => (
+              <details className="editor-section" open key={list}>
+                <summary>
+                  <span>{list === "loans" ? "Loan products" : "Savings products"}</span>
+                  <Icon name="plus" />
+                </summary>
+                <div className="editor-section-body">
+                  <p className="quiet">
+                    Each product has its own page on the website. Lists take one item per line.
                   </p>
-                  <Field label="Product name">
-                    <input
-                      value={product.title}
-                      onChange={(event) =>
-                        update((next) => {
-                          next.loans[index]!.title = event.target.value;
-                        })
-                      }
-                    />
-                  </Field>
-                  <Field label="Description">
-                    <textarea
-                      rows={3}
-                      value={product.description}
-                      onChange={(event) =>
-                        update((next) => {
-                          next.loans[index]!.description = event.target.value;
-                        })
-                      }
-                    />
-                  </Field>
+                  {content[list].map((product, index) => (
+                    <details className="repeat-item" key={product.id}>
+                      <summary className="repeat-summary">
+                        {product.title || `Product ${index + 1}`}
+                        <Icon name="plus" />
+                      </summary>
+                      {productFields.map(([key, label]) => (
+                        <Field key={key} label={label}>
+                          {key === "title" ? (
+                            <input
+                              value={product[key]}
+                              onChange={(event) =>
+                                update((next) => {
+                                  next[list][index]![key] = event.target.value;
+                                })
+                              }
+                            />
+                          ) : (
+                            <textarea
+                              rows={key === "description" || key === "audience" ? 3 : 5}
+                              value={product[key]}
+                              onChange={(event) =>
+                                update((next) => {
+                                  next[list][index]![key] = event.target.value;
+                                })
+                              }
+                            />
+                          )}
+                        </Field>
+                      ))}
+                    </details>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </details>
-        ) : null}
+              </details>
+            ))
+          : null}
         {id === "contact" ? (
           <details className="editor-section" open>
             <summary>
@@ -362,6 +380,117 @@ export function ContentFields({
               </details>
             ))
           : null}
+        {id === "partners" ? (
+          <details className="editor-section" open>
+            <summary>
+              <span>Partners</span>
+              <Icon name="plus" />
+            </summary>
+            <div className="editor-section-body">
+              <p className="quiet">
+                Shown as cards in this order. A partner with a website opens it in a new tab; without a logo, the
+                short name is shown instead.
+              </p>
+              {content.partners.map((partner, index) => (
+                <div className="repeat-item" key={index}>
+                  <div className="two-fields">
+                    <Field label="Short name">
+                      <input
+                        value={partner.name}
+                        onChange={(event) =>
+                          update((next) => {
+                            next.partners[index]!.name = event.target.value;
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="Website (optional)">
+                      <input
+                        type="url"
+                        placeholder="https://"
+                        value={partner.url}
+                        onChange={(event) =>
+                          update((next) => {
+                            next.partners[index]!.url = event.target.value.trim();
+                          })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Full name">
+                    <input
+                      value={partner.fullName}
+                      onChange={(event) =>
+                        update((next) => {
+                          next.partners[index]!.fullName = event.target.value;
+                        })
+                      }
+                    />
+                  </Field>
+                  <ImageField
+                    label="Logo"
+                    noneLabel="No logo (show the short name)"
+                    value={partner.logo}
+                    onChange={(value) =>
+                      update((next) => {
+                        next.partners[index]!.logo = value;
+                      })
+                    }
+                  />
+                  <div className="repeat-actions">
+                    <button
+                      className="text-button"
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() =>
+                        update((next) => {
+                          next.partners.splice(index - 1, 0, next.partners.splice(index, 1)[0]!);
+                        })
+                      }
+                    >
+                      Move up
+                    </button>
+                    <button
+                      className="text-button"
+                      type="button"
+                      disabled={index === content.partners.length - 1}
+                      onClick={() =>
+                        update((next) => {
+                          next.partners.splice(index + 1, 0, next.partners.splice(index, 1)[0]!);
+                        })
+                      }
+                    >
+                      Move down
+                    </button>
+                    <button
+                      className="text-button danger-text"
+                      type="button"
+                      onClick={() =>
+                        update((next) => {
+                          next.partners.splice(index, 1);
+                        })
+                      }
+                    >
+                      Remove partner
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() =>
+                  update((next) => {
+                    next.partners.push({ name: "", fullName: "", logo: "", url: "" });
+                  })
+                }
+              >
+                <Icon name="plus" />
+                Add partner
+              </button>
+            </div>
+          </details>
+        ) : null}
         {id === "faq" ? (
           <details className="editor-section" open>
             <summary>

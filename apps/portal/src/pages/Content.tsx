@@ -33,12 +33,7 @@ export function ContentList() {
   );
   return (
     <>
-      <PageHeader
-        eyebrow="Words that welcome. Stories that connect."
-        title="Website content"
-      >
-        Pick a page, change the words, and save. It’s live straight away.
-      </PageHeader>
+      <PageHeader title="Website content" />
       <div className="filter-bar">
         <label className="search-field">
           <span className="sr-only">Search website content</span>
@@ -61,26 +56,10 @@ export function ContentList() {
               to={`/content/${doc.id}`}
               key={doc.id}
             >
-              <div className="content-card-top">
-                <span className="row-symbol">
-                  <Icon
-                    name={
-                      doc.id === "shared"
-                        ? "people"
-                        : doc.id === "calculator"
-                          ? "wallet"
-                          : "book"
-                    }
-                  />
-                </span>
-              </div>
-              <p className="kicker">{doc.category}</p>
               <h2>{doc.title}</h2>
-              <p>{doc.description}</p>
-              <div className="content-card-footer">
-                <small>{entry ? `Updated ${date(entry.updatedAt)}` : ""}</small>
-                <Icon name="arrow" />
-              </div>
+              {entry ? (
+                <span className="sr-only">{`Updated ${date(entry.updatedAt)}`}</span>
+              ) : null}
             </Link>
           );
         })}

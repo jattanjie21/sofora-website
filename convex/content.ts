@@ -6,15 +6,22 @@ import { documentKey, activity } from "./validators";
 import { staffQuery, staffMutation, requirePermission, log, activityDto } from "./lib/access";
 import { defaultWebsiteContent, type WebsiteContent } from "../apps/web/src/data/websiteDefaults";
 import { copyFields } from "../apps/web/src/data/copy";
-import { applyDocument, contentError, documents } from "../apps/portal/src/data/content";
+import { applyDocument, contentError, documents, productFields } from "../apps/portal/src/data/content";
+import type { Product } from "../apps/web/src/data/content";
 import type { DocumentId } from "../apps/portal/src/data/types";
 
 export function slice(content:WebsiteContent,key:DocumentId) {
   return JSON.stringify({copy:Object.fromEntries(copyFields.filter(f=>f.page===key).map(f=>[f.key,content.copy[f.key]])),
-    ...(key==="board"?{board:content.board}:key==="staff"?{staff:content.staff}:key==="loans"?{loans:content.loans}:key==="contact"?{contact:content.contact}:key==="faq"?{faqs:content.faqs}:{})});
+    ...(key==="board"?{board:content.board}:key==="staff"?{staff:content.staff}:key==="loans"?{loans:content.loans}:key==="saving"?{savings:content.savings}:key==="contact"?{contact:content.contact}:key==="faq"?{faqs:content.faqs}:key==="partners"?{partners:content.partners}:{})});
 }
+// Stored products fill in fields added since they were saved; products are matched by id.
+function withProductDefaults(stored:unknown,defaults:Product[]) {
+  return Array.isArray(stored)?defaults.map(d=>({...d,...stored.find(p=>p?.id===d.id)})):stored;
+}
+const productsValid=(list:unknown,defaults:Product[])=>Array.isArray(list)&&list.length===defaults.length&&list.every((p,i)=>p?.id===defaults[i]!.id&&productFields.every(([k])=>typeof p[k]==="string"&&p[k].length<=(k==="title"?200:12000)));
 export function merge(content:WebsiteContent,payload:string,key:DocumentId) {
   const data=JSON.parse(payload);
+  for(const list of ["loans","savings"] as const) if(data[list]) data[list]=withProductDefaults(data[list],defaultWebsiteContent[list]);
   return applyDocument(content,{...defaultWebsiteContent,...data,copy:{...defaultWebsiteContent.copy,...data.copy}},key);
 }
 async function validate(ctx:QueryCtx,payload:string,key:DocumentId) {
@@ -33,12 +40,14 @@ async function validate(ctx:QueryCtx,payload:string,key:DocumentId) {
       if(!Array.isArray(group)||group.length>100||group.some(row=>!Array.isArray(row)||row.length!==3||row.some(s=>typeof s!=="string"||s.length>200))) throw new Error();
       images.push(...group.map(row=>row[2]));
     }
+    if(!Array.isArray(content.partners)||content.partners.length>100||content.partners.some(p=>!p||(["name","fullName","logo","url"] as const).some(k=>typeof p[k]!=="string"||p[k].length>2000))) throw new Error();
+    images.push(...content.partners.map(p=>p.logo).filter(Boolean));
     for(const value of images) if(value.startsWith("storage:")) {
       const storageId=ctx.db.system.normalizeId("_storage",value.slice(8));
       const asset=storageId?await ctx.db.query("media").withIndex("by_storageId",q=>q.eq("storageId",storageId)).unique():null;
       if(!asset) throw new Error();
     }
-    if(!Array.isArray(content.loans)||content.loans.length!==defaultWebsiteContent.loans.length||content.loans.some((p,i)=>p.id!==defaultWebsiteContent.loans[i]!.id||typeof p.title!=="string"||p.title.length>200||typeof p.description!=="string"||p.description.length>12000)) throw new Error();
+    if(!productsValid(content.loans,defaultWebsiteContent.loans)||!productsValid(content.savings,defaultWebsiteContent.savings)) throw new Error();
     if(!Array.isArray(content.faqs)||content.faqs.length>100||content.faqs.some(f=>typeof f.question!=="string"||typeof f.answer!=="string"||f.question.length>1000||f.answer.length>12000)) throw new Error();
     if(typeof content.contact.email!=="string"||typeof content.contact.address!=="string"||content.contact.address.length>2000||!Array.isArray(content.contact.phones)||content.contact.phones.length>20) throw new Error();
   } catch {throw new ConvexError("The page contains invalid content.");}
@@ -52,7 +61,7 @@ export async function publishedContent(ctx:QueryCtx) {
   return content;
 }
 async function imageUrls(ctx:QueryCtx,contents:WebsiteContent[]) {
-  const ids=[...new Set(contents.flatMap(content=>[...Object.values(content.copy),...content.board.map(p=>p[2]),...content.staff.map(p=>p[2])].filter(value=>value.startsWith("storage:")).map(value=>value.slice(8))))];
+  const ids=[...new Set(contents.flatMap(content=>[...Object.values(content.copy),...content.board.map(p=>p[2]),...content.staff.map(p=>p[2]),...content.partners.map(p=>p.logo)].filter(value=>value.startsWith("storage:")).map(value=>value.slice(8))))];
   return Object.fromEntries(await Promise.all(ids.map(async id=>[`storage:${id}`,await ctx.storage.getUrl(id as Id<"_storage">)])));
 }
 export const published=query({args:{},returns:v.object({content:v.string(),images:v.record(v.string(),v.union(v.string(),v.null()))}),handler:async ctx=>{

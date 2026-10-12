@@ -11,7 +11,7 @@ How the public website, the staff portal and Convex fit together. Current as of 
 
 ## How content flows
 
-1. `apps/web/src/data/copy.ts` lists every editable field (page, section, label, key, default, kind) and `content.ts` holds the lists (loans, FAQs, board, staff, contact). Together they are the default content.
+1. `apps/web/src/data/copy.ts` lists every editable field (page, section, label, key, default, kind) and `content.ts` holds the lists (loans, savings products, FAQs, board, staff, contact). Together they are the default content.
 2. Convex stores one `pages` row per page id, holding that page's fields as JSON. `setup:initialize` seeds the rows from the defaults; `setup:resetPages` replaces them.
 3. `content.published` merges the stored rows over the defaults. The public site loads it in `LiveWebsite.tsx` and re-renders when it changes. Fields missing from a stored row fall back to the default, so adding a field needs no migration.
 4. The portal's Website content screen lists the pages in `documents` (`apps/portal/src/data/content.ts`). Its editor is generated from the `copy.ts` rows, with extra editors for lists and photos in `ContentFields.tsx`.

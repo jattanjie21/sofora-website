@@ -1,14 +1,22 @@
 import { useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, NavLink, useSearchParams } from "react-router";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../../../convex/_generated/api";
 import { useWebsite } from "../data/WebsiteContent";
 import { Icon } from "../components/Icon";
-import { PageHeader } from "../components/ui";
+import { HeroBanner, usePageTitle } from "../components/ui";
 import type { NewApplication } from "../../../portal/src/data/types";
 
 export type FormName = "registration" | "membership" | "kafo" | "loan";
+
+const forms: FormName[] = ["membership", "loan", "kafo", "registration"];
+const formPaths: Record<FormName, string> = {
+  membership: "/membership-application-form/",
+  loan: "/loan-application-form/",
+  kafo: "/kafo-application-form/",
+  registration: "/registration-form/",
+};
 
 // The four forms from the old website, each sending an application to the staff portal.
 export function Apply({ form, preview = false }: { form: FormName; preview?: boolean }) {
@@ -19,6 +27,7 @@ export function Apply({ form, preview = false }: { form: FormName; preview?: boo
     kafo: c["shared.nav-kafo-form"],
     loan: c["shared.nav-loan-form"],
   }[form];
+  usePageTitle(title);
   const pdf = {
     registration: c["downloads.file-2-path"],
     membership: c["downloads.file-4-path"],
@@ -27,10 +36,22 @@ export function Apply({ form, preview = false }: { form: FormName; preview?: boo
   }[form];
   return (
     <>
-      <PageHeader title={title} />
-      <div className="container page-panel">
+      <HeroBanner title={title} intro={c[`shared.forms-intro-${form}`]} image={c["shared.forms-hero-image"]}>
+        <nav className="gallery-tabs" aria-label={c["shared.nav-forms-downloads"]}>
+          {forms.map((name) => (
+            <NavLink key={name} to={formPaths[name]}>
+              {c[`shared.forms-tab-${name}`]}
+            </NavLink>
+          ))}
+        </nav>
+        <span className="hero-meta">
+          <Icon name="calendar" />
+          {c["shared.forms-time"]}
+        </span>
+      </HeroBanner>
+      <div className="container application-body">
         {preview ? (
-          <p>Applications can only be submitted from the public website.</p>
+          <p className="application-card">Applications can only be submitted from the public website.</p>
         ) : (
           <ApplicationForm key={form} form={form} pdf={pdf} />
         )}
@@ -40,7 +61,7 @@ export function Apply({ form, preview = false }: { form: FormName; preview?: boo
 }
 
 function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string }) {
-  const { loans, contact } = useWebsite();
+  const { copy: c, loans, contact } = useWebsite();
   const [params] = useSearchParams();
   const submitApplication = useMutation(api.applications.submit);
   const [requestId] = useState(() => crypto.randomUUID());
@@ -89,23 +110,32 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
 
   if (reference)
     return (
-      <div className="application-receipt" role="status">
+      <div className="application-card application-receipt" role="status">
+        <span className="application-receipt-icon">
+          <Icon name="check" />
+        </span>
         <h2>Application received</h2>
         <p>Thank you, {form.name}. Our team will review your application and contact you.</p>
-        <p>Your application reference</p>
+        <p className="application-reference-label">Your application reference</p>
         <strong>{reference}</strong>
         <p>Keep this reference for any follow-up. Submitting an application does not confirm membership or loan approval.</p>
-        <Link className="btn" to="/">Back to Home</Link>
+        <Link className="btn" to="/">
+          Back to Home
+          <Icon name="arrow" />
+        </Link>
       </div>
     );
 
   const group = formName === "kafo";
   return (
     <div className="application-layout">
-      <form className="application-form" onSubmit={submit}>
+      <form className="application-card application-form" onSubmit={submit}>
         {error ? <p className="field-error" role="alert">{error}</p> : null}
         <fieldset disabled={pending}>
-          <legend>{group ? "Organisation details" : "Personal details"}</legend>
+          <legend>
+            <span className="legend-step">1</span>
+            {group ? "Organisation details" : "Personal details"}
+          </legend>
           <div className="form-grid">
             <label>
               {group ? "Organisation’s name" : "Full name"}
@@ -130,7 +160,10 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
           </div>
         </fieldset>
         <fieldset disabled={pending}>
-          <legend>{kind === "loan" ? "Loan details" : "Membership"}</legend>
+          <legend>
+            <span className="legend-step">2</span>
+            {kind === "loan" ? "Loan details" : "Membership"}
+          </legend>
           <div className="form-grid">
             {kind === "loan" ? (
               <>
@@ -178,20 +211,45 @@ function ApplicationForm({ form: formName, pdf }: { form: FormName; pdf: string 
             <input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <span>I confirm these details are accurate and agree that Sofora may use them to review this application and contact me about it.</span>
           </label>
-          <button className="btn">{pending ? "Submitting…" : "Submit"}</button>
+          <button className="btn">
+            {pending ? "Submitting…" : "Submit application"}
+            {pending ? null : <Icon name="arrow" />}
+          </button>
         </fieldset>
       </form>
       <aside className="application-aside">
-        <h2>Prefer the paper form?</h2>
-        <p>Download the fillable PDF, complete it and bring it to our branch office with your passport size photo and ID card or passport.</p>
-        <a className="btn btn-outline" href={pdf} download>
-          <Icon name="download" />
-          Download PDF
-        </a>
-        <h3>Need help?</h3>
-        <p>Please do not enter ID numbers, bank passwords or card details in this form.</p>
-        <a href={`tel:${contact.phones[0]?.replace(/\s/g, "")}`}>{contact.phones[0]}</a>
-        <a href={`mailto:${contact.email}`}>{contact.email}</a>
+        <div className="side-card">
+          <h3>{c["shared.forms-steps-heading"]}</h3>
+          <ol className="side-steps">
+            {([1, 2, 3] as const).map((n) => (
+              <li key={n}>{c[`shared.forms-step-${n}`]}</li>
+            ))}
+          </ol>
+        </div>
+        <div className="side-card side-card-navy">
+          <h3>Prefer the paper form?</h3>
+          <p>Download the fillable PDF, complete it and bring it to our branch office with your passport size photo and ID card or passport.</p>
+          <a className="btn btn-small" href={pdf} download>
+            <Icon name="download" />
+            Download PDF
+          </a>
+        </div>
+        <div className="side-card">
+          <h3>Need help?</h3>
+          <p>Please do not enter ID numbers, bank passwords or card details in this form.</p>
+          <ul className="side-contacts">
+            {contact.phones[0] ? (
+              <li>
+                <Icon name="phone" />
+                <a href={`tel:${contact.phones[0].replace(/\s/g, "")}`}>{contact.phones[0]}</a>
+              </li>
+            ) : null}
+            <li>
+              <Icon name="mail" />
+              <a href={`mailto:${contact.email}`}>{contact.email}</a>
+            </li>
+          </ul>
+        </div>
       </aside>
     </div>
   );

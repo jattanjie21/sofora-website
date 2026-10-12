@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useWebsite } from "../data/WebsiteContent";
-import type { Person } from "../data/content";
-import { Icon, LoanIcon } from "./Icon";
+import { applyPath, isLoan, servicePath, type Person, type Product } from "../data/content";
+import { Icon, ServiceIcon } from "./Icon";
 
 const external = /^(https?:|mailto:|tel:)/i;
 
@@ -30,6 +30,62 @@ export function SmartLink({
     <Link className={className} to={to}>
       {children}
     </Link>
+  );
+}
+
+// Photo header with a navy wash, used by the gallery, contact, partners, downloads and application form pages. `children` sits in the bottom row.
+export function HeroBanner({
+  title,
+  intro,
+  image,
+  children,
+}: {
+  title: string;
+  intro: string;
+  image: string;
+  children?: ReactNode;
+}) {
+  return (
+    <section className="hero-banner" style={{ backgroundImage: `url("${image}")` }}>
+      <div className="container">
+        <h1>{title}</h1>
+        <p>{intro}</p>
+        {children ? <div className="hero-banner-foot">{children}</div> : null}
+      </div>
+    </section>
+  );
+}
+
+// Closing call to action shown just above the footer.
+export function CtaBanner({
+  heading,
+  text,
+  primary,
+  secondary,
+}: {
+  heading: string;
+  text: string;
+  primary: [label: string, to: string];
+  secondary: [label: string, to: string];
+}) {
+  return (
+    <div className="container">
+      <section className="cta-banner">
+        <div>
+          <h2>{heading}</h2>
+          <p>{text}</p>
+        </div>
+        <div className="cta-banner-actions">
+          <Link className="btn cta-banner-primary" to={primary[1]}>
+            {primary[0]}
+            <Icon name="arrow" />
+          </Link>
+          <Link className="btn cta-banner-secondary" to={secondary[1]}>
+            {secondary[0]}
+          </Link>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -149,24 +205,36 @@ export function Slider({ slides }: { slides: Slide[] }) {
   );
 }
 
-export function LoanCards({ apply = false }: { apply?: boolean }) {
-  const { copy: c, loans } = useWebsite();
+// A loan or savings product card: the whole card opens the product page.
+export function ProductCard({ product }: { product: Product }) {
+  const { copy: c } = useWebsite();
   return (
-    <div className="card-grid">
-      {loans.map((loan) => (
-        <article className="loan-card" key={loan.id}>
-          <LoanIcon id={loan.id} />
-          <h3>{loan.title}</h3>
-          <p>{loan.description}</p>
-          {apply ? (
-            <Link
-              className="text-link"
-              to={`/loan-application-form/?product=${loan.id}`}
-            >
-              {c["loans.apply-link"]}
-            </Link>
-          ) : null}
-        </article>
+    <article className="product-card">
+      <span className="product-card-icon">
+        <ServiceIcon id={product.id} />
+      </span>
+      <h3>
+        <Link to={servicePath(product.id)}>{product.title}</Link>
+      </h3>
+      <p>{product.description}</p>
+      <div className="product-card-links">
+        <span className="text-link" aria-hidden="true">
+          {c["loans.learn-more"]}
+          <Icon name="arrow" />
+        </span>
+        <Link className="product-card-apply" to={applyPath(product.id)}>
+          {isLoan(product.id) ? c["loans.apply-link"] : c["saving.apply"]}
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+export function ProductGrid({ products, columns = 3 }: { products: Product[]; columns?: 3 | 4 }) {
+  return (
+    <div className={`product-grid product-grid-${columns}`}>
+      {products.map((product) => (
+        <ProductCard product={product} key={product.id} />
       ))}
     </div>
   );
@@ -220,10 +288,12 @@ export function PeopleGrid({ people }: { people: Person[] }) {
     <div className="people-grid">
       {people.map(([name, role, photo], index) => (
         <figure className="person" key={index}>
-          <img src={photo} alt="" loading="lazy" />
+          <div className="person-photo">
+            <img src={photo} alt="" loading="lazy" />
+          </div>
           <figcaption>
-            <span>{role}</span>
             <strong>{name}</strong>
+            <span>{role}</span>
           </figcaption>
         </figure>
       ))}

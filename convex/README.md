@@ -14,7 +14,7 @@ One Convex backend serves the public website and the staff portal. Push changes 
 | `staff.ts` | `me` (public), `list`, `save`, `profile`, `invite` | Staff records are separate from auth `users`; `invite` creates a single-use activation link. |
 | `media.ts` | `uploadUrl`, `register`, `url`, `urls` | Photo uploads (PNG/JPEG/WebP, 2 MB) into Convex storage, referenced in content as `storage:<id>`. |
 | `auth.ts`, `auth.config.ts`, `http.ts` | — | Convex Auth with passwords. Accounts can only be created from an invitation (or the dev login below). |
-| `setup.ts` | `initialize`, `resetPages` (internal) | `initialize` creates the first admin and seeds pages once. `resetPages` replaces all pages with the defaults. |
+| `setup.ts` | `initialize`, `resetPages`, `addMissingPages` (internal) | `initialize` creates the first admin and seeds pages once. `resetPages` replaces all pages with the defaults. `addMissingPages` adds default rows only for pages that have none. |
 | `devLogins.ts` | `seed` (internal) | Creates/resets the `admin` / `admin` login. Only runs where `DEV_LOGINS=true`. Called by `npm start`. |
 
 Internal functions run from the CLI, for example `pnpm exec convex run setup:resetPages`.

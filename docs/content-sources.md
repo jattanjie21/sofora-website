@@ -11,7 +11,7 @@ Wording is copied word for word, including the original spelling and grammar, so
 | Home | `/` | Slider, rates, about, loan cards, calculators, latest news, help banner. |
 | About, History, FAQ | `/about-us/`, `/history/`, `/faq/` | FAQ questions came from the accordion titles in the page source. |
 | Board of Directors, Staff, Loan Team | `/board-of-directors/`, `/staff/`, `/loan-team/` | Loan Team showed the same people as Staff. |
-| Loan Services, Saving | `/loan-services/`, `/saving/` | |
+| Loan Services, Saving | `/loan-services/`, `/saving/` | Now the `/services/` hub and product pages. The longer product texts (who it's for, benefits, requirements, steps) were written new, from the old site's FAQ and descriptions |
 | Downloads | `/downloads/` | The four fillable PDFs are in `apps/web/public/downloads/`. |
 | Blog and its two posts | `/blog/`, `/exciting-news-for-sofora-cooperative-credit-union-members/`, `/the-evolution-of-sofora/` | |
 | Photo Gallery | `/photo-gallery/` | The old gallery plugin was broken and showed nothing; photos were taken from the media library. |
@@ -60,3 +60,8 @@ Large JPEGs were resized to at most 1920px wide and recompressed. The loan card 
 | `savings-graph.jpeg` | `2021/10/graph.jpeg` |
 | `gallery-3.jpg` | `2021/04/49778651_1914485865328126_2156158983721713664_n.jpg` |
 | `gallery-4.jpeg` | `2026/04/WhatsApp-Image-2026-04-28-at-11.16.40.jpeg` |
+| `gallery-hero.jpg` | Not from the old site: Unsplash photo by Tunde Buremo (https://unsplash.com/photos/cnVn4Gg4b00), Unsplash License, cropped to 1920×1100 |
+| `contact-hero.jpg` | Not from the old site: Unsplash photo by Random Institute (https://unsplash.com/photos/fOeH7Nh2oy0), Unsplash License, cropped to 1920×1100 |
+| `partners-hero.jpg` | Not from the old site: Unsplash photo by Iwaria Inc. (https://unsplash.com/photos/Q6KzWe-lq9Y), Unsplash License, cropped to 1920×1100 |
+| `forms-hero.jpg` | Not from the old site: Unsplash photo by Sincerely Media (https://unsplash.com/photos/zghx6KQgZyY), Unsplash License, cropped to 1920×1100 |
+| `downloads-hero.jpg` | Not from the old site: Unsplash photo by Annie Spratt (https://unsplash.com/photos/6WYXkhwj6H8), Unsplash License, cropped to 1920×1100 |

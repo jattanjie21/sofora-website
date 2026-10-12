@@ -4,7 +4,7 @@ Read this first. It is kept current; `README.md` has the full human-facing detai
 
 ## What this is
 
-- `apps/web` (`@sofora/web`, port 5173): public website for Sofora Cooperative Credit Union. A faithful copy of the old WordPress site at soforaccu.com (same menu, wording, photos, old URLs such as `/about-us/`, `/loan-services/`), rebuilt in React.
+- `apps/web` (`@sofora/web`, port 5173): public website for Sofora Cooperative Credit Union. A faithful copy of the old WordPress site at soforaccu.com (same menu, wording, photos, old URLs such as `/about-us/`), rebuilt in React. Services were reorganised into one `/services/` hub with a page per product (`/services/car-loan/`); `/loan-services/` and `/saving/` redirect into it.
 - `apps/portal` (`@sofora/portal`, port 5174): staff portal. Edit website content (save = live, no drafts), work membership/loan applications, manage staff.
 - `convex/`: one Convex backend for both apps. Dev deployment `jovial-ptarmigan-163` (see root `.env.local`). See `convex/README.md` for the backend map.
 
@@ -13,17 +13,18 @@ Read this first. It is kept current; `README.md` has the full human-facing detai
 - `npm start` / `npm stop`: Convex + both apps in the background; logs in `.dev/logs/`. Opens the browser.
 - Portal login (dev only): `admin` / `admin`. Created by `convex/devLogins.ts`, only where the Convex env var `DEV_LOGINS=true` (set on the dev deployment, never production).
 - `pnpm typecheck`, `pnpm build`: both must pass. There are no automated tests.
-- `pnpm screenshot /loan-services/ out.png [width]`: screenshot a public page (needs `npm start`). Use this to check visual changes.
+- `pnpm screenshot /services/ out.png [width]`: screenshot a public page (needs `npm start`). Use this to check visual changes.
 
 ## Where to change things
 
 | To change | Edit |
 | --- | --- |
 | Any website text or image (defaults) | `apps/web/src/data/copy.ts`: one row per field `[page, section, label, key, default, kind]`. The portal editor is generated from these rows. |
-| Loans, FAQs, board, staff, contact details, portal image picker | `apps/web/src/data/content.ts` |
+| Loans, savings products (and their pages' text), FAQs, board, staff, partners, contact details, portal image picker | `apps/web/src/data/content.ts` (`servicePath`/`applyPath` give a product's page and Apply link) |
 | Page layout | `apps/web/src/pages/*` (routes in `apps/web/src/App.tsx`) |
 | Header, menu, footer | `apps/web/src/components/Layout.tsx` |
-| Shared blocks (slider, page header, loan cards, people grid, FAQ) | `apps/web/src/components/ui.tsx` |
+| Services hub and product pages | `apps/web/src/pages/Services.tsx` |
+| Shared blocks (slider, page header, photo hero `HeroBanner`, closing `CtaBanner`, product cards, people grid, FAQ) | `apps/web/src/components/ui.tsx` |
 | Colours, fonts, all public styling | `apps/web/src/styles.css` (tokens at the top) |
 | Site search | `apps/web/src/data/search.ts` (client-side over live content; results at `/?s=`) |
 | Editable page list in the portal, per-page validation | `apps/portal/src/data/content.ts` (`documents`, `applyDocument`, `contentError`) |
@@ -35,7 +36,9 @@ Read this first. It is kept current; `README.md` has the full human-facing detai
 ## Recipes
 
 - **Add a text/image field:** add a row to `copy.ts`, use `c["page.key"]` in the page. Nothing else; stored pages fall back to defaults for new keys.
-- **Add a website page:** add its id to `pageIds` in `copy.ts`, rows for its fields, a route in `App.tsx`, an entry in `documents` (portal `data/content.ts`), and a path in `search.ts`. Then run the reset below on dev, because the database has no row for the new page.
+- **Add a website page:** add its id to `pageIds` in `copy.ts`, rows for its fields, a route in `App.tsx`, an entry in `documents` (portal `data/content.ts`), and a path in `search.ts`. Then run `pnpm exec convex run setup:addMissingPages`, because the database has no row for the new page (it leaves existing pages alone).
+- **Add a field to every loan/savings product:** add it to `Product` and each product in `content.ts`, and to `productFields` (portal `data/content.ts`), which drives the editor and both validations. Stored products get the default for new fields (`withProductDefaults` in `convex/content.ts`), so no reset is needed.
+- **Change a default label that is already stored:** saved pages keep their old value. Give the row a new key so the new default shows (as done for `shared.nav-forms-downloads`).
 - **Reset dev content to defaults** (wipes content edits): `pnpm exec convex run setup:resetPages`.
 - **Change the Convex schema when data already exists:** a push fails if existing documents don't match. Loosen the field (optional / `v.string()`), push with `pnpm exec convex dev --once --typecheck disable` if types break, migrate the data with an internal mutation, then tighten and push again. Never use `--typecheck disable` for the final push.
 - **Images:** put files in `apps/web/public/images/` with flat names (validation only accepts `/images/<name>`), compress large JPEGs, and add them to `imageLibrary` in `content.ts` so the portal offers them.

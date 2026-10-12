@@ -52,7 +52,6 @@ export function Applications() {
   return (
     <>
       <PageHeader
-        eyebrow="Every application has a story"
         title="Applications"
         action={
           <Link className="btn" to="/applications/new">
@@ -60,9 +59,7 @@ export function Applications() {
             New application
           </Link>
         }
-      >
-        Help the next member take their next step.
-      </PageHeader>
+      />
       <div className="application-overview">
         <div>
           <strong>

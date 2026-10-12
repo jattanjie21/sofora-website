@@ -15,7 +15,7 @@ export function WebsitePreview({
   version: string;
 }) {
   const { images: savedImages } = useWorkspace();
-  const references = [...new Set([...Object.values(content.copy), ...content.board.map((p) => p[2]), ...content.staff.map((p) => p[2])].filter(value => value.startsWith("storage:")))];
+  const references = [...new Set([...Object.values(content.copy), ...content.board.map((p) => p[2]), ...content.staff.map((p) => p[2]), ...content.partners.map((p) => p.logo)].filter(value => value.startsWith("storage:")))];
   const uploadedImages = useQuery(api.media.urls, references.length ? { references } : "skip");
   const images = { ...savedImages, ...uploadedImages };
   const frame = useRef<HTMLIFrameElement>(null);

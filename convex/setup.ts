@@ -28,3 +28,28 @@ export const resetPages=internalMutation({args:{},returns:v.number(),handler:asy
   for(const doc of documents) await ctx.db.insert("pages",{key:doc.id,published:slice(defaultWebsiteContent,doc.id),revision:1,updatedAt:at,updatedBy:admin._id});
   return documents.length;
 }});
+
+// Adds a default row for any website page that has none (e.g. a newly added page), leaving existing pages untouched.
+// Internal only: run with `pnpm exec convex run setup:addMissingPages`.
+export const addMissingPages=internalMutation({args:{},returns:v.array(v.string()),handler:async ctx=>{
+  const admin=await ctx.db.query("staff").first();
+  if(!admin) throw new ConvexError("Initialize the workspace first.");
+  const existing=new Set((await ctx.db.query("pages").take(100)).map(page=>page.key));
+  const at=new Date().toISOString();
+  const added=documents.filter(doc=>!existing.has(doc.id));
+  for(const doc of added) await ctx.db.insert("pages",{key:doc.id,published:slice(defaultWebsiteContent,doc.id),revision:1,updatedAt:at,updatedBy:admin._id});
+  return added.map(doc=>doc.id);
+}});
+
+// Replaces the staff page people list with the default order from content.ts (other staff page fields unchanged).
+// Internal only: run with `pnpm exec convex run setup:syncStaffFromDefaults`.
+export const syncStaffFromDefaults=internalMutation({args:{},returns:v.null(),handler:async ctx=>{
+  const admin=await ctx.db.query("staff").first();
+  if(!admin) throw new ConvexError("Initialize the workspace first.");
+  const page=await ctx.db.query("pages").withIndex("by_key",q=>q.eq("key","staff")).unique();
+  if(!page) return null;
+  const data=JSON.parse(page.published);
+  data.staff=defaultWebsiteContent.staff;
+  await ctx.db.patch(page._id,{published:JSON.stringify(data),revision:page.revision+1,updatedAt:new Date().toISOString(),updatedBy:admin._id});
+  return null;
+}});

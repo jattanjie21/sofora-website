@@ -5,11 +5,11 @@ import { Icon } from "./Icon";
 import { SmartLink } from "./ui";
 import { SearchForm } from "../pages/Search";
 
-type MenuItem = { label: string; to?: string; children?: MenuItem[] };
+// `alsoActive` lists other pages that highlight a plain menu item; a trailing `/*` matches every page below it.
+type MenuItem = { label: string; to?: string; alsoActive?: string[]; children?: MenuItem[] };
 
 function useMenu(): MenuItem[] {
   const { copy: c } = useWebsite();
-  const partner = (name: string, url?: string) => ({ label: name, to: url });
   return [
     { label: c["shared.nav-home"], to: "/" },
     {
@@ -27,50 +27,27 @@ function useMenu(): MenuItem[] {
         { label: c["shared.nav-staff"], to: "/staff/" },
       ],
     },
+    { label: c["shared.nav-services"], to: "/services/", alsoActive: ["/services/*"] },
+    { label: c["shared.nav-partners"], to: "/partners/" },
     {
-      label: c["shared.nav-services"],
-      children: [
-        { label: c["shared.nav-loans"], to: "/loan-services/" },
-        { label: c["shared.nav-saving"], to: "/saving/" },
-        { label: c["shared.nav-downloads"], to: "/downloads/" },
-        { label: c["shared.nav-member-login"], to: c["shared.member-login-url"] },
-      ],
-    },
-    { label: c["shared.nav-blog"], to: "/blog/" },
-    {
-      label: c["shared.nav-partners"],
-      children: [
-        partner(c["shared.partner-1"], c["shared.partner-1-url"]),
-        partner(c["shared.partner-2"], c["shared.partner-2-url"]),
-        partner(c["shared.partner-3"], c["shared.partner-3-url"]),
-        partner(c["shared.partner-4"], c["shared.partner-4-url"]),
-        partner(c["shared.partner-5"]),
-        partner(c["shared.partner-6"]),
-        partner(c["shared.partner-7"], c["shared.partner-7-url"]),
-      ],
-    },
-    {
-      label: c["shared.nav-forms"],
+      label: c["shared.nav-forms-downloads"],
       children: [
         { label: c["shared.nav-registration-form"], to: "/registration-form/" },
         { label: c["shared.nav-membership-form"], to: "/membership-application-form/" },
         { label: c["shared.nav-kafo-form"], to: "/kafo-application-form/" },
         { label: c["shared.nav-loan-form"], to: "/loan-application-form/" },
+        { label: c["shared.nav-downloads"], to: "/downloads/" },
       ],
     },
-    {
-      label: c["shared.nav-gallery"],
-      children: [
-        { label: c["shared.nav-photos"], to: "/photo-gallery/" },
-        { label: c["shared.nav-videos"], to: "/youtube-gallery/" },
-      ],
-    },
+    { label: c["shared.nav-gallery"], to: "/photo-gallery/", alsoActive: ["/youtube-gallery/"] },
     { label: c["shared.nav-contact"], to: "/contact-us/" },
   ];
 }
 
 const samePage = (a: string, b: string) =>
-  a.replace(/\/+$/, "") === b.replace(/\/+$/, "");
+  a.endsWith("/*")
+    ? b.startsWith(a.slice(0, -1))
+    : a.replace(/\/+$/, "") === b.replace(/\/+$/, "");
 
 function Header() {
   const { copy: c, contact } = useWebsite();
@@ -153,7 +130,7 @@ function Header() {
               {menu.map((item) => {
                 const active = item.children
                   ? item.children.some((child) => child.to && samePage(child.to, pathname))
-                  : item.to !== undefined && samePage(item.to, pathname);
+                  : [item.to, ...(item.alsoActive ?? [])].some((to) => to !== undefined && samePage(to, pathname));
                 if (!item.children)
                   return (
                     <li key={item.label}>

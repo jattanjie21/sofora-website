@@ -39,17 +39,17 @@ export function PageHeader({
   children,
   action,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
-  children: ReactNode;
+  children?: ReactNode;
   action?: ReactNode;
 }) {
   return (
     <div className="page-heading">
       <div>
-        <p className="kicker">{eyebrow}</p>
+        {eyebrow ? <p className="kicker">{eyebrow}</p> : null}
         <h1>{title}</h1>
-        <p className="page-description">{children}</p>
+        {children ? <p className="page-description">{children}</p> : null}
       </div>
       {action ? <div className="heading-actions">{action}</div> : null}
     </div>

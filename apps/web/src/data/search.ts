@@ -1,4 +1,5 @@
 import { copyFields, type PageId } from "./copy";
+import { servicePath } from "./content";
 import type { WebsiteContent } from "./websiteDefaults";
 
 type Entry = { title: string; path: string; text: string };
@@ -9,12 +10,13 @@ const pagePaths: Partial<Record<PageId, [titleKey: keyof WebsiteContent["copy"],
   faq: ["faq.title", "/faq/"],
   board: ["board.title", "/board-of-directors/"],
   staff: ["staff.title", "/staff/"],
-  loans: ["loans.title", "/loan-services/"],
-  saving: ["saving.title", "/saving/"],
+  loans: ["loans.hub-title", "/services/"],
+  saving: ["saving.heading", "/services/#savings"],
   downloads: ["downloads.title", "/downloads/"],
-  photos: ["photos.title", "/photo-gallery/"],
-  videos: ["videos.title", "/youtube-gallery/"],
+  photos: ["shared.nav-gallery", "/photo-gallery/"],
+  videos: ["shared.nav-gallery", "/youtube-gallery/"],
   contact: ["contact.title", "/contact-us/"],
+  partners: ["partners.title", "/partners/"],
 };
 const posts = [
   ["blog.post-1-", "/exciting-news-for-sofora-cooperative-credit-union-members/"],
@@ -32,14 +34,20 @@ function entries(content: WebsiteContent): Entry[] {
   const list: Entry[] = [{ title: c["shared.nav-home"], path: "/", text: textOf("home") }];
   for (const [page, [titleKey, path]] of Object.entries(pagePaths) as [PageId, [keyof typeof c, string]][]) {
     const extra =
-      page === "loans" ? content.loans.map((l) => `${l.title} ${l.description}`)
-      : page === "faq" ? content.faqs.map((f) => `${f.question} ${f.answer}`)
+      page === "faq" ? content.faqs.map((f) => `${f.question} ${f.answer}`)
       : page === "board" ? content.board.map(([name, role]) => `${name} ${role}`)
       : page === "staff" ? content.staff.map(([name, role]) => `${name} ${role}`)
       : page === "contact" ? [content.contact.address, content.contact.email, ...content.contact.phones]
+      : page === "partners" ? content.partners.map((p) => `${p.name} ${p.fullName}`)
       : [];
     list.push({ title: c[titleKey], path, text: [textOf(page), ...extra].join(" ") });
   }
+  for (const product of [...content.loans, ...content.savings])
+    list.push({
+      title: product.title,
+      path: servicePath(product.id),
+      text: [product.description, product.audience, product.benefits, product.requirements, product.steps].join(" "),
+    });
   for (const [key, path, text] of [
     ["shared.nav-registration-form", "/registration-form/", "membership registration apply join"],
     ["shared.nav-membership-form", "/membership-application-form/", "membership application apply join sole joint"],
